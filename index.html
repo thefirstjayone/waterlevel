@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Water Level</title>
   <style>
     body {
@@ -8,20 +10,23 @@
       text-align: center;
       background: #f0f8ff;
       padding: 30px;
+      margin: 0;
     }
 
     h2 {
       color: #2c3e50;
+      font-size: 28px;
+      margin-bottom: 20px;
     }
 
     #tank {
       display: flex;
       flex-direction: column;
-      width: 100px;
-      height: 300px;
+      width: 120px;
+      height: 400px;
       margin: 30px auto;
       border: 3px solid #2c3e50;
-      border-radius: 10px;
+      border-radius: 12px;
       overflow: hidden;
       transition: border 0.3s ease, box-shadow 0.3s ease;
     }
@@ -36,7 +41,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
+      font-size: 16px;
       font-weight: bold;
       color: white;
       transition: background 0.3s ease;
@@ -70,27 +75,70 @@
       font-size: 14px;
       color: #555;
     }
+
+    @media (max-width: 600px) {
+      #tank {
+        width: 80vw;
+        height: 60vh;
+      }
+
+      .segment {
+        font-size: 5vw;
+      }
+
+      h2 {
+        font-size: 6vw;
+      }
+
+      #last-updated {
+        font-size: 4vw;
+      }
+    }
   </style>
 </head>
 <body>
   <h2>Water Level</h2>
-  <div class="spinner" id="spinner"></div>
+  <div class="spinner" id="loading"></div>
+
   <div id="tank" style="display: none;">
     <div class="segment" id="seg1">100%</div>
     <div class="segment" id="seg2">75%</div>
     <div class="segment" id="seg3">50%</div>
     <div class="segment" id="seg4">25%</div>
   </div>
-  <div id="last-updated">Updated just now.</div>
+
+  <div id="last-updated"></div>
 
   <script>
-    const apiUrl = "https://api.thingspeak.com/channels/3025601/feeds/last.json?api_key=TRTP21O7HR219MPB";
-    const threshold = 500;
-    let lastUpdateTime = Date.now();
+    const channelID = "3025601";
+    const apiKey = "TRTP21O7HR219MPB";
+    const threshold = 512;
+    let lastUpdate = 0;
+
+    function fetchData() {
+      const url = `https://api.thingspeak.com/channels/${channelID}/feeds/last.json?api_key=${apiKey}`;
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          const levels = [
+            parseInt(data.field1),
+            parseInt(data.field2),
+            parseInt(data.field3),
+            parseInt(data.field4),
+          ];
+
+          updateTank(levels);
+          lastUpdate = Date.now();
+          document.getElementById("loading").style.display = "none";
+          document.getElementById("tank").style.display = "flex";
+        })
+        .catch(err => {
+          console.error("ThingSpeak fetch error:", err);
+        });
+    }
 
     function updateTank(levels) {
       let allLow = true;
-
       const segIds = ["seg1", "seg2", "seg3", "seg4"];
       for (let i = 0; i < 4; i++) {
         const seg = document.getElementById(segIds[i]);
@@ -104,44 +152,20 @@
         }
       }
 
-      const tank = document.getElementById("tank");
-      tank.classList.toggle("empty", allLow);
-    }
-
-    function updateData() {
-      document.getElementById("spinner").style.display = "block";
-      document.getElementById("tank").style.display = "none";
-
-      fetch(apiUrl)
-        .then(response => response.json())
-        .then(data => {
-          const values = [
-            parseInt(data.field1), // 100%
-            parseInt(data.field2), // 75%
-            parseInt(data.field3), // 50%
-            parseInt(data.field4)  // 25%
-          ];
-
-          updateTank(values);
-          lastUpdateTime = Date.now();
-
-          document.getElementById("spinner").style.display = "none";
-          document.getElementById("tank").style.display = "flex";
-        })
-        .catch(err => {
-          console.error("Error fetching ThingSpeak data:", err);
-        });
+      document.getElementById("tank").classList.toggle("empty", allLow);
     }
 
     function updateTimer() {
-      const seconds = Math.floor((Date.now() - lastUpdateTime) / 1000);
-      document.getElementById("last-updated").textContent =
-        seconds === 0 ? "Updated just now." : `Updated ${seconds} second${seconds === 1 ? "" : "s"} ago.`;
+      const elapsed = Math.floor((Date.now() - lastUpdate) / 1000);
+      if (!isNaN(elapsed)) {
+        document.getElementById("last-updated").innerText =
+          `Last updated: ${elapsed} seconds ago`;
+      }
     }
 
-    updateData();
-    setInterval(updateData, 15000);  // Refresh every 15 seconds
-    setInterval(updateTimer, 1000);  // Update time display every second
+    fetchData();
+    setInterval(fetchData, 15000);      // refresh data every 15 sec
+    setInterval(updateTimer, 1000);     // update timer every second
   </script>
 </body>
 </html>

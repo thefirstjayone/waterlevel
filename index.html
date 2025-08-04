@@ -3,8 +3,50 @@
 <head>
   <title>Water Level</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    .sensor { margin: 10px 0; font-size: 18px; }
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 30px;
+      background: #f5faff;
+    }
+
+    h2 {
+      color: #2c3e50;
+    }
+
+    #tank {
+      position: relative;
+      width: 100px;
+      height: 300px;
+      margin: 40px auto;
+      border: 4px solid #3498db;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #ecf0f1;
+      display: flex;
+      flex-direction: column-reverse;
+      justify-content: flex-start;
+    }
+
+    .level {
+      width: 100%;
+      flex: 1;
+      transition: background 0.5s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: bold;
+      color: #ffffff;
+    }
+
+    .filled {
+      background-color: #3498db;
+    }
+
+    .empty {
+      background-color: transparent;
+    }
 
     .spinner {
       margin: 20px auto;
@@ -21,22 +63,22 @@
       100% { transform: rotate(360deg); }
     }
 
-    #spinner-wrapper {
-      display: flex;
-      justify-content: center;
-    }
-
     #last-updated {
       margin-top: 20px;
       font-size: 14px;
-      color: #666;
+      color: #555;
     }
   </style>
 </head>
 <body>
   <h2>Water Level</h2>
-  <div id="spinner-wrapper"><div class="spinner" id="spinner"></div></div>
-  <div id="output" style="display:none;"></div>
+  <div class="spinner" id="spinner"></div>
+  <div id="tank" style="display: none;">
+    <div class="level" id="level4">25%</div>
+    <div class="level" id="level3">50%</div>
+    <div class="level" id="level2">75%</div>
+    <div class="level" id="level1">100%</div>
+  </div>
   <div id="last-updated">Updated just now.</div>
 
   <script>
@@ -44,31 +86,39 @@
     const threshold = 500;
     let lastUpdateTime = Date.now();
 
-    const labels = ["100%", "75%", "50%", "25%"];
+    function updateTank(levels) {
+      for (let i = 0; i < 4; i++) {
+        const elem = document.getElementById("level" + (4 - i));
+        if (levels[i] >= threshold) {
+          elem.classList.add("filled");
+          elem.classList.remove("empty");
+        } else {
+          elem.classList.remove("filled");
+          elem.classList.add("empty");
+        }
+      }
+    }
 
     function updateData() {
       document.getElementById("spinner").style.display = "block";
-      document.getElementById("output").style.display = "none";
+      document.getElementById("tank").style.display = "none";
 
       fetch(apiUrl)
         .then(response => response.json())
         .then(data => {
-          let html = "";
-          for (let i = 1; i <= 4; i++) {
-            const value = parseInt(data["field" + i]);
-            const icon = value >= threshold ? "🟩" : "🟥";
-            html += `<div class="sensor">${labels[i - 1]}: ${icon}</div>`;
-          }
+          const levels = [
+            parseInt(data.field1),
+            parseInt(data.field2),
+            parseInt(data.field3),
+            parseInt(data.field4),
+          ];
+          updateTank(levels);
 
           lastUpdateTime = Date.now();
-          document.getElementById("output").innerHTML = html;
           document.getElementById("spinner").style.display = "none";
-          document.getElementById("output").style.display = "block";
+          document.getElementById("tank").style.display = "flex";
         })
         .catch(error => {
-          document.getElementById("output").textContent = "Error fetching data.";
-          document.getElementById("spinner").style.display = "none";
-          document.getElementById("output").style.display = "block";
           console.error("ThingSpeak error:", error);
         });
     }

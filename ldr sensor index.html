@@ -1,1 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Water Level</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f0f8ff;
+      padding: 30px;
+      margin: 0;
+    }
 
+    h2 {
+      color: #2c3e50;
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+
+    #tank {
+      display: flex;
+      flex-direction: column;
+      width: 120px;
+      height: 400px;
+      margin: 30px auto;
+      border: 3px solid #2c3e50;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: border 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    #tank.empty {
+      border-color: #e74c3c;
+      box-shadow: 0 0 15px #e74c3c;
+    }
+
+    .segment {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      transition: background 0.3s ease;
+    }
+
+    .high {
+      background-color: #2ecc71; /* green */
+    }
+
+    .low {
+      background-color: #e74c3c; /* red */
+    }
+
+    .spinner {
+      margin: 20px auto;
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #3498db;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #last-updated {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    @media (max-width: 600px) {
+      #tank {
+        width: 80vw;
+        height: 60vh;
+      }
+
+      .segment {
+        font-size: 5vw;
+      }
+
+      h2 {
+        font-size: 6vw;
+      }
+
+      #last-updated {
+        font-size: 4vw;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h2>Water Level</h2>
+  <div class="spinner" id="loading"></div>
+
+  <div id="tank" style="display: none;">
+    <div class="segment" id="seg1">100%</div>
+    <div class="segment" id="seg2">75%</div>
+    <div class="segment" id="seg3">50%</div>
+    <div class="segment" id="seg4">25%</div>
+  </div>
+
+  <div id="last-updated"></div>
+
+  <script>
+    const channelID = "3025601";
+    const apiKey = "TRTP21O7HR219MPB";
+    const threshold = 512;
+    let lastUpdate = 0;
+
+    function fetchData() {
+      const url = `https://api.thingspeak.com/channels/${channelID}/feeds/last.json?api_key=${apiKey}`;
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          const levels = [
+            parseInt(data.field1),
+            parseInt(data.field2),
+            parseInt(data.field3),
+            parseInt(data.field4),
+          ];
+
+          updateTank(levels);
+          lastUpdate = Date.now();
+          document.getElementById("loading").style.display = "none";
+          document.getElementById("tank").style.display = "flex";
+        })
+        .catch(err => {
+          console.error("ThingSpeak fetch error:", err);
+        });
+    }
+
+    function updateTank(levels) {
+      let allLow = true;
+      const segIds = ["seg1", "seg2", "seg3", "seg4"];
+      for (let i = 0; i < 4; i++) {
+        const seg = document.getElementById(segIds[i]);
+        if (levels[i] >= threshold) {
+          seg.classList.remove("low");
+          seg.classList.add("high");
+          allLow = false;
+        } else {
+          seg.classList.remove("high");
+          seg.classList.add("low");
+        }
+      }
+
+      document.getElementById("tank").classList.toggle("empty", allLow);
+    }
+
+    function updateTimer() {
+      const elapsed = Math.floor((Date.now() - lastUpdate) / 1000);
+      if (!isNaN(elapsed)) {
+        document.getElementById("last-updated").innerText =
+          `Last updated: ${elapsed} seconds ago`;
+      }
+    }
+
+    fetchData();
+    setInterval(fetchData, 15000);      // refresh data every 15 sec
+    setInterval(updateTimer, 1000);     // update timer every second
+  </script>
+</body>
+</html>

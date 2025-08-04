@@ -1,171 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>Water Level</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
       font-family: Arial, sans-serif;
-      text-align: center;
-      background: #f0f8ff;
-      padding: 30px;
-      margin: 0;
-    }
-
-    h2 {
-      color: #2c3e50;
-      font-size: 28px;
-      margin-bottom: 20px;
-    }
-
-    #tank {
+      background: #e6f7ff;
       display: flex;
       flex-direction: column;
+      align-items: center;
+      padding-top: 30px;
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+    .tank {
       width: 120px;
-      height: 400px;
-      margin: 30px auto;
-      border: 3px solid #2c3e50;
-      border-radius: 12px;
-      overflow: hidden;
-      transition: border 0.3s ease, box-shadow 0.3s ease;
+      height: 300px;
+      border: 4px solid #333;
+      display: flex;
+      flex-direction: column-reverse;
+      margin-top: 20px;
+      background: #fff;
     }
-
-    #tank.empty {
-      border-color: #e74c3c;
-      box-shadow: 0 0 15px #e74c3c;
-    }
-
     .segment {
       flex: 1;
+      border-top: 2px solid #ccc;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
       font-weight: bold;
-      color: white;
+      font-size: 1.2em;
       transition: background 0.3s ease;
     }
-
-    .high {
-      background-color: #2ecc71; /* green */
+    .active {
+      background-color: #4CAF50; /* green = full */
+      color: white;
     }
-
-    .low {
-      background-color: #e74c3c; /* red */
+    .inactive {
+      background-color: #e74c3c; /* red = empty */
+      color: white;
     }
-
+    .status {
+      margin-top: 15px;
+      font-size: 1.1em;
+    }
     .spinner {
-      margin: 20px auto;
-      border: 6px solid #f3f3f3;
-      border-top: 6px solid #3498db;
+      border: 5px solid #ccc;
+      border-top: 5px solid #333;
       border-radius: 50%;
-      width: 40px;
-      height: 40px;
+      width: 30px;
+      height: 30px;
       animation: spin 1s linear infinite;
+      margin: 15px auto;
     }
-
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-
-    #last-updated {
-      margin-top: 20px;
-      font-size: 14px;
+    .mode {
+      margin-top: 10px;
+      font-size: 1em;
       color: #555;
-    }
-
-    @media (max-width: 600px) {
-      #tank {
-        width: 80vw;
-        height: 60vh;
-      }
-
-      .segment {
-        font-size: 5vw;
-      }
-
-      h2 {
-        font-size: 6vw;
-      }
-
-      #last-updated {
-        font-size: 4vw;
-      }
     }
   </style>
 </head>
 <body>
-  <h2>Water Level</h2>
-  <div class="spinner" id="loading"></div>
-
-  <div id="tank" style="display: none;">
-    <div class="segment" id="seg1">100%</div>
-    <div class="segment" id="seg2">75%</div>
-    <div class="segment" id="seg3">50%</div>
-    <div class="segment" id="seg4">25%</div>
+  <h1>Water Level</h1>
+  <div class="tank">
+    <div id="seg100" class="segment inactive">100%</div>
+    <div id="seg75" class="segment inactive">75%</div>
+    <div id="seg50" class="segment inactive">50%</div>
+    <div id="seg25" class="segment inactive">25%</div>
   </div>
-
-  <div id="last-updated"></div>
+  <div class="spinner"></div>
+  <div class="status" id="lastUpdate">Loading...</div>
+  <div class="mode" id="modeLabel">Startup Mode</div>
 
   <script>
-    const channelID = "3025601";
-    const apiKey = "TRTP21O7HR219MPB";
-    const threshold = 512;
-    let lastUpdate = 0;
+    const channelID = 3026172;
+    const readAPIKey = "AHHPO1T2TZDGZ2G8";
 
-    function fetchData() {
-      const url = `https://api.thingspeak.com/channels/${channelID}/feeds/last.json?api_key=${apiKey}`;
-      fetch(url)
-        .then(response => response.json())
-        .then(data => {
-          const levels = [
-            parseInt(data.field1),
-            parseInt(data.field2),
-            parseInt(data.field3),
-            parseInt(data.field4),
-          ];
-
-          updateTank(levels);
-          lastUpdate = Date.now();
-          document.getElementById("loading").style.display = "none";
-          document.getElementById("tank").style.display = "flex";
-        })
-        .catch(err => {
-          console.error("ThingSpeak fetch error:", err);
-        });
+    async function fetchLatestValue() {
+      const url = `https://api.thingspeak.com/channels/${channelID}/feeds.json?results=4&api_key=${readAPIKey}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      return data.feeds;
     }
 
-    function updateTank(levels) {
-      let allLow = true;
-      const segIds = ["seg1", "seg2", "seg3", "seg4"];
-      for (let i = 0; i < 4; i++) {
-        const seg = document.getElementById(segIds[i]);
-        if (levels[i] >= threshold) {
-          seg.classList.remove("low");
-          seg.classList.add("high");
-          allLow = false;
-        } else {
-          seg.classList.remove("high");
-          seg.classList.add("low");
-        }
-      }
-
-      document.getElementById("tank").classList.toggle("empty", allLow);
-    }
-
-    function updateTimer() {
-      const elapsed = Math.floor((Date.now() - lastUpdate) / 1000);
-      if (!isNaN(elapsed)) {
-        document.getElementById("last-updated").innerText =
-          `Last updated: ${elapsed} seconds ago`;
+    function updateTank(level) {
+      const segments = {
+        25: document.getElementById('seg25'),
+        50: document.getElementById('seg50'),
+        75: document.getElementById('seg75'),
+        100: document.getElementById('seg100')
+      };
+      for (let val of [25, 50, 75, 100]) {
+        segments[val].classList.remove('active', 'inactive');
+        segments[val].classList.add(val <= level ? 'active' : 'inactive');
       }
     }
 
-    fetchData();
-    setInterval(fetchData, 15000);      // refresh data every 15 sec
-    setInterval(updateTimer, 1000);     // update timer every second
+    function secondsSince(dateStr) {
+      const then = new Date(dateStr);
+      const now = new Date();
+      return Math.floor((now - then) / 1000);
+    }
+
+    function isStartupMode(values) {
+      const levels = values.map(v => parseInt(v.field1));
+      return levels.join(',') === "25,50,75,100";
+    }
+
+    async function refresh() {
+      const feeds = await fetchLatestValue();
+      const latest = feeds[feeds.length - 1];
+      const level = parseInt(latest.field1);
+      const time = latest.created_at;
+      const secsAgo = secondsSince(time);
+
+      updateTank(level);
+      document.getElementById('lastUpdate').innerText = `Updated ${secsAgo} seconds ago`;
+
+      const modeLabel = document.getElementById('modeLabel');
+      if (isStartupMode(feeds)) {
+        modeLabel.innerText = "Startup Mode";
+      } else {
+        modeLabel.innerText = "Live Mode";
+      }
+    }
+
+    refresh();
+    setInterval(refresh, 15000);
   </script>
 </body>
 </html>

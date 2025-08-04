@@ -1,12 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Water Level</title>
+  <title>LDR Status</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
     .sensor { margin: 10px 0; font-size: 18px; }
-    .high { color: green; }
-    .low { color: red; }
 
     .spinner {
       margin: 20px auto;
@@ -36,7 +34,7 @@
   </style>
 </head>
 <body>
-  <h2>Water Level</h2>
+  <h2>LDR Status</h2>
   <div id="spinner-wrapper"><div class="spinner" id="spinner"></div></div>
   <div id="output" style="display:none;"></div>
   <div id="last-updated">Updated just now.</div>
@@ -45,6 +43,8 @@
     const apiUrl = "https://api.thingspeak.com/channels/3025601/feeds/last.json?api_key=TRTP21O7HR219MPB";
     const threshold = 500;
     let lastUpdateTime = Date.now();
+
+    const labels = ["100%", "75%", "50%", "25%"];
 
     function updateData() {
       document.getElementById("spinner").style.display = "block";
@@ -56,9 +56,8 @@
           let html = "";
           for (let i = 1; i <= 4; i++) {
             const value = parseInt(data["field" + i]);
-            const status = value >= threshold ? "HIGH" : "LOW";
-            const cssClass = value >= threshold ? "high" : "low";
-            html += `<div class="sensor">LDR ${i}: <span class="${cssClass}">${status}</span></div>`;
+            const icon = value >= threshold ? "🟩" : "🟥";
+            html += `<div class="sensor">${labels[i - 1]}: ${icon}</div>`;
           }
 
           lastUpdateTime = Date.now();
@@ -80,10 +79,9 @@
       document.getElementById("last-updated").textContent = text;
     }
 
-    // Initial load
     updateData();
-    setInterval(updateData, 15000); // Refresh data every 15s
-    setInterval(updateTimer, 1000); // Update timestamp every 1s
+    setInterval(updateData, 15000);
+    setInterval(updateTimer, 1000);
   </script>
 </body>
 </html>

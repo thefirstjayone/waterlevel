@@ -22,13 +22,13 @@
       height: 300px;
       border: 4px solid #333;
       display: flex;
-      flex-direction: column-reverse;
+      flex-direction: column; /* normal top-down */
       margin-top: 20px;
       background: #fff;
     }
     .segment {
       flex: 1;
-      border-top: 2px solid #ccc;
+      border-bottom: 2px solid #ccc;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -37,11 +37,11 @@
       transition: background 0.3s ease;
     }
     .active {
-      background-color: #4CAF50; /* green = full */
+      background-color: #4CAF50;
       color: white;
     }
     .inactive {
-      background-color: #e74c3c; /* red = empty */
+      background-color: #e74c3c;
       color: white;
     }
     .status {
@@ -93,15 +93,15 @@
 
     function updateTank(level) {
       const segments = {
-        25: document.getElementById('seg25'),
-        50: document.getElementById('seg50'),
+        100: document.getElementById('seg100'),
         75: document.getElementById('seg75'),
-        100: document.getElementById('seg100')
+        50: document.getElementById('seg50'),
+        25: document.getElementById('seg25')
       };
-      for (let val of [25, 50, 75, 100]) {
+      [100, 75, 50, 25].forEach(val => {
         segments[val].classList.remove('active', 'inactive');
         segments[val].classList.add(val <= level ? 'active' : 'inactive');
-      }
+      });
     }
 
     function secondsSince(dateStr) {

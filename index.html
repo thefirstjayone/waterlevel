@@ -17,26 +17,27 @@
     const apiUrl = "https://api.thingspeak.com/channels/3025601/feeds/last.json?api_key=TRTP21O7HR219MPB";
     const threshold = 500;
 
-    fetch(apiUrl)
-      .then(response => response.json())
-      .then(data => {
-        let html = "";
-        for (let i = 1; i <= 4; i++) {
-          const value = parseInt(data["field" + i]);
-          const status = value >= threshold ? "HIGH" : "LOW";
-          const cssClass = value >= threshold ? "high" : "low";
-          html += `<div class="sensor">LDR ${i}: <span class="${cssClass}">${status}</span></div>`;
-        }
-        document.getElementById("output").innerHTML = html;
-      })
-      .catch(error => {
-        document.getElementById("output").textContent = "Error fetching data.";
-        console.error("ThingSpeak error:", error);
-      });
+    function updateData() {
+      fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+          let html = "";
+          for (let i = 1; i <= 4; i++) {
+            const value = parseInt(data["field" + i]);
+            const status = value >= threshold ? "HIGH" : "LOW";
+            const cssClass = value >= threshold ? "high" : "low";
+            html += `<div class="sensor">LDR ${i}: <span class="${cssClass}">${status}</span></div>`;
+          }
+          document.getElementById("output").innerHTML = html;
+        })
+        .catch(error => {
+          document.getElementById("output").textContent = "Error fetching data.";
+          console.error("ThingSpeak error:", error);
+        });
+    }
 
-updateData(); // Run once on page load
-setInterval(updateData, 15000); // Then every 15 seconds
-
+    updateData(); // Run once on page load
+    setInterval(updateData, 15000); // Then every 15 seconds
   </script>
 </body>
 </html>

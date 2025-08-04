@@ -33,6 +33,10 @@
         document.getElementById("output").textContent = "Error fetching data.";
         console.error("ThingSpeak error:", error);
       });
+
+updateData(); // Run once on page load
+setInterval(updateData, 15000); // Then every 15 seconds
+
   </script>
 </body>
 </html>

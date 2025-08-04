@@ -23,6 +23,12 @@
       border: 3px solid #2c3e50;
       border-radius: 10px;
       overflow: hidden;
+      transition: border 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    #tank.empty {
+      border-color: #e74c3c;
+      box-shadow: 0 0 15px #e74c3c;
     }
 
     .segment {
@@ -83,15 +89,25 @@
     let lastUpdateTime = Date.now();
 
     function updateTank(levels) {
+      let allLow = true;
+
       for (let i = 0; i < 4; i++) {
         const seg = document.getElementById(`seg${i + 1}`);
         if (levels[i] >= threshold) {
           seg.classList.remove("low");
           seg.classList.add("high");
+          allLow = false;
         } else {
           seg.classList.remove("high");
           seg.classList.add("low");
         }
+      }
+
+      const tank = document.getElementById("tank");
+      if (allLow) {
+        tank.classList.add("empty");
+      } else {
+        tank.classList.remove("empty");
       }
     }
 
@@ -128,7 +144,7 @@
 
     updateData();
     setInterval(updateData, 15000);  // Refresh every 15 sec
-    setInterval(updateTimer, 1000);  // Update timer every second
+    setInterval(updateTimer, 1000);  // Update timer every sec
   </script>
 </body>
 </html>

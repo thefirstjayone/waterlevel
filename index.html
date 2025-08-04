@@ -6,8 +6,8 @@
     body {
       font-family: Arial, sans-serif;
       text-align: center;
+      background: #f0f8ff;
       padding: 30px;
-      background: #f5faff;
     }
 
     h2 {
@@ -15,37 +15,33 @@
     }
 
     #tank {
-      position: relative;
-      width: 100px;
-      height: 300px;
-      margin: 40px auto;
-      border: 4px solid #3498db;
-      border-radius: 10px;
-      overflow: hidden;
-      background: #ecf0f1;
       display: flex;
       flex-direction: column-reverse;
-      justify-content: flex-start;
+      width: 100px;
+      height: 300px;
+      margin: 30px auto;
+      border: 3px solid #2c3e50;
+      border-radius: 10px;
+      overflow: hidden;
     }
 
-    .level {
-      width: 100%;
+    .segment {
       flex: 1;
-      transition: background 0.5s;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 14px;
       font-weight: bold;
-      color: #ffffff;
+      color: white;
+      transition: background 0.3s ease;
     }
 
-    .filled {
-      background-color: #3498db;
+    .high {
+      background-color: #2ecc71; /* green */
     }
 
-    .empty {
-      background-color: transparent;
+    .low {
+      background-color: #e74c3c; /* red */
     }
 
     .spinner {
@@ -74,10 +70,10 @@
   <h2>Water Level</h2>
   <div class="spinner" id="spinner"></div>
   <div id="tank" style="display: none;">
-    <div class="level" id="level4">25%</div>
-    <div class="level" id="level3">50%</div>
-    <div class="level" id="level2">75%</div>
-    <div class="level" id="level1">100%</div>
+    <div class="segment" id="seg1">100%</div>
+    <div class="segment" id="seg2">75%</div>
+    <div class="segment" id="seg3">50%</div>
+    <div class="segment" id="seg4">25%</div>
   </div>
   <div id="last-updated">Updated just now.</div>
 
@@ -88,13 +84,13 @@
 
     function updateTank(levels) {
       for (let i = 0; i < 4; i++) {
-        const elem = document.getElementById("level" + (4 - i));
+        const seg = document.getElementById(`seg${i + 1}`);
         if (levels[i] >= threshold) {
-          elem.classList.add("filled");
-          elem.classList.remove("empty");
+          seg.classList.remove("low");
+          seg.classList.add("high");
         } else {
-          elem.classList.remove("filled");
-          elem.classList.add("empty");
+          seg.classList.remove("high");
+          seg.classList.add("low");
         }
       }
     }
@@ -106,32 +102,33 @@
       fetch(apiUrl)
         .then(response => response.json())
         .then(data => {
-          const levels = [
-            parseInt(data.field1),
-            parseInt(data.field2),
-            parseInt(data.field3),
-            parseInt(data.field4),
+          const values = [
+            parseInt(data.field1), // 100%
+            parseInt(data.field2), // 75%
+            parseInt(data.field3), // 50%
+            parseInt(data.field4)  // 25%
           ];
-          updateTank(levels);
+
+          updateTank(values);
 
           lastUpdateTime = Date.now();
           document.getElementById("spinner").style.display = "none";
           document.getElementById("tank").style.display = "flex";
         })
-        .catch(error => {
-          console.error("ThingSpeak error:", error);
+        .catch(err => {
+          console.error("Error fetching ThingSpeak data:", err);
         });
     }
 
     function updateTimer() {
-      const secondsAgo = Math.floor((Date.now() - lastUpdateTime) / 1000);
-      const text = secondsAgo === 0 ? "Updated just now." : `Updated ${secondsAgo} second${secondsAgo === 1 ? "" : "s"} ago.`;
-      document.getElementById("last-updated").textContent = text;
+      const seconds = Math.floor((Date.now() - lastUpdateTime) / 1000);
+      document.getElementById("last-updated").textContent =
+        seconds === 0 ? "Updated just now." : `Updated ${seconds} second${seconds === 1 ? "" : "s"} ago.`;
     }
 
     updateData();
-    setInterval(updateData, 15000);
-    setInterval(updateTimer, 1000);
+    setInterval(updateData, 15000);  // Refresh every 15 sec
+    setInterval(updateTimer, 1000);  // Update timer every second
   </script>
 </body>
 </html>

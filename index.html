@@ -16,7 +16,7 @@
 
     #tank {
       display: flex;
-      flex-direction: column-reverse;
+      flex-direction: column;
       width: 100px;
       height: 300px;
       margin: 30px auto;
@@ -91,8 +91,9 @@
     function updateTank(levels) {
       let allLow = true;
 
+      const segIds = ["seg1", "seg2", "seg3", "seg4"];
       for (let i = 0; i < 4; i++) {
-        const seg = document.getElementById(`seg${i + 1}`);
+        const seg = document.getElementById(segIds[i]);
         if (levels[i] >= threshold) {
           seg.classList.remove("low");
           seg.classList.add("high");
@@ -104,11 +105,7 @@
       }
 
       const tank = document.getElementById("tank");
-      if (allLow) {
-        tank.classList.add("empty");
-      } else {
-        tank.classList.remove("empty");
-      }
+      tank.classList.toggle("empty", allLow);
     }
 
     function updateData() {
@@ -126,8 +123,8 @@
           ];
 
           updateTank(values);
-
           lastUpdateTime = Date.now();
+
           document.getElementById("spinner").style.display = "none";
           document.getElementById("tank").style.display = "flex";
         })
@@ -143,8 +140,8 @@
     }
 
     updateData();
-    setInterval(updateData, 15000);  // Refresh every 15 sec
-    setInterval(updateTimer, 1000);  // Update timer every sec
+    setInterval(updateData, 15000);  // Refresh every 15 seconds
+    setInterval(updateTimer, 1000);  // Update time display every second
   </script>
 </body>
 </html>

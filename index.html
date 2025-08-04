@@ -7,17 +7,42 @@
     .sensor { margin: 10px 0; font-size: 18px; }
     .high { color: green; }
     .low { color: red; }
+
+    /* Spinner styles */
+    .spinner {
+      margin: 20px auto;
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #3498db;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #spinner-wrapper {
+      display: flex;
+      justify-content: center;
+    }
   </style>
 </head>
 <body>
   <h2>LDR Status</h2>
-  <div id="output">Loading...</div>
+  <div id="spinner-wrapper"><div class="spinner" id="spinner"></div></div>
+  <div id="output" style="display:none;"></div>
 
   <script>
     const apiUrl = "https://api.thingspeak.com/channels/3025601/feeds/last.json?api_key=TRTP21O7HR219MPB";
     const threshold = 500;
 
     function updateData() {
+      document.getElementById("spinner").style.display = "block";
+      document.getElementById("output").style.display = "none";
+
       fetch(apiUrl)
         .then(response => response.json())
         .then(data => {
@@ -28,16 +53,22 @@
             const cssClass = value >= threshold ? "high" : "low";
             html += `<div class="sensor">LDR ${i}: <span class="${cssClass}">${status}</span></div>`;
           }
+
           document.getElementById("output").innerHTML = html;
+          document.getElementById("spinner").style.display = "none";
+          document.getElementById("output").style.display = "block";
         })
         .catch(error => {
           document.getElementById("output").textContent = "Error fetching data.";
+          document.getElementById("spinner").style.display = "none";
+          document.getElementById("output").style.display = "block";
           console.error("ThingSpeak error:", error);
         });
     }
 
-    updateData(); // Run once on page load
-    setInterval(updateData, 15000); // Then every 15 seconds
+    updateData(); // First run
+    setInterval(updateData, 15000); // Every 15 seconds
   </script>
 </body>
 </html>
+

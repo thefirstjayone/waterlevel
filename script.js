@@ -7,17 +7,17 @@ const lastUpdateEl = document.getElementById("last-update");
 let lastUpdateTime = null;
 
 function updateTank(level) {
-    // Set water color
+    // Set translucent, desaturated water color
     if (level >= 100) {
-        water.style.backgroundColor = "#00ff00"; // green
+        water.style.backgroundColor = "rgba(0, 180, 0, 0.5)"; // green
     } else if (level >= 75) {
-        water.style.backgroundColor = "#0000ff"; // blue
+        water.style.backgroundColor = "rgba(0, 100, 200, 0.5)"; // blue
     } else if (level >= 50) {
-        water.style.backgroundColor = "#ffff00"; // yellow
+        water.style.backgroundColor = "rgba(200, 200, 0, 0.5)"; // yellow
     } else if (level >= 25) {
-        water.style.backgroundColor = "#ff0000"; // red
+        water.style.backgroundColor = "rgba(200, 50, 50, 0.5)"; // red
     } else {
-        water.style.backgroundColor = "#ff0000"; // red (low)
+        water.style.backgroundColor = "rgba(200, 50, 50, 0.5)"; // red (low)
         water.classList.add("flash");
     }
 

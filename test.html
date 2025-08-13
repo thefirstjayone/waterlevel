@@ -2,8 +2,75 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Water Tank Level</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f0f0f0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .tank {
+            width: 80%;
+            max-width: 300px;
+            height: 60%;
+            border: 4px solid #000;
+            position: relative;
+            background: #ddd;
+        }
+
+        .water {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            transition: height 1s ease, background-color 0.5s ease;
+        }
+
+        .green { background: green; }
+        .blue { background: blue; }
+        .yellow { background: yellow; }
+        .red { background: red; }
+
+        .flash {
+            animation: flashRed 1s infinite;
+        }
+
+        @keyframes flashRed {
+            0% { background-color: red; }
+            50% { background-color: darkred; }
+            100% { background-color: red; }
+        }
+
+        .level-text {
+            position: absolute;
+            width: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            text-align: center;
+            font-size: 2em;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .update-time {
+            margin-top: 15px;
+            font-size: 1em;
+            color: #333;
+        }
+    </style>
 </head>
 <body>
     <h1>Water Tank Level</h1>
@@ -13,9 +80,13 @@
         <div class="level-text" id="levelText">Loading...</div>
     </div>
 
+    <div class="update-time" id="updateTime">Last updated: -- seconds ago</div>
+
     <script>
-        const channelID = "3026172"; // Your ThingSpeak Channel ID
-        const readAPIKey = "AHHPO1T2TZDGZ2G8"; // Your ThingSpeak Read API Key
+        const channelID = "3026172"; // ThingSpeak Channel ID
+        const readAPIKey = "AHHPO1T2TZDGZ2G8"; // ThingSpeak Read API Key
+
+        let lastUpdateTime = null;
 
         function updateTank(level) {
             const waterDiv = document.getElementById("water");
@@ -50,16 +121,27 @@
                 .then(data => {
                     const level = parseFloat(data.field1) || 0;
                     updateTank(level);
+                    lastUpdateTime = Date.now();
                 })
                 .catch(error => {
                     console.error("Error fetching data:", error);
                 });
         }
 
+        function updateTimeSince() {
+            const updateTimeDiv = document.getElementById("updateTime");
+            if (lastUpdateTime) {
+                const secondsAgo = Math.floor((Date.now() - lastUpdateTime) / 1000);
+                updateTimeDiv.textContent = `Last updated: ${secondsAgo} second${secondsAgo !== 1 ? 's' : ''} ago`;
+            }
+        }
+
         // Initial load
         fetchLevel();
         // Update every 20 seconds
         setInterval(fetchLevel, 20000);
+        // Update time counter every second
+        setInterval(updateTimeSince, 1000);
     </script>
 </body>
 </html>

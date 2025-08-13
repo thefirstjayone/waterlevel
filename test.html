@@ -19,19 +19,25 @@
           <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
         </linearGradient>
       </defs>
-      <!-- Tank outline -->
-      <path d="M 30 20 Q 100 0 170 20 L 170 370 L 30 370 Z" 
+      <!-- Tank outline with rounded bottom -->
+      <path d="M 30 20 
+               Q 100 0 170 20 
+               L 170 350 
+               Q 170 370 150 370 
+               L 50 370 
+               Q 30 370 30 350 
+               Z" 
             fill="#2a2a2a" stroke="#ccc" stroke-width="4"/>
       <!-- Water wave -->
       <path id="water" fill="rgba(0, 150, 255, 0.5)"></path>
       <!-- Reflection highlight -->
-      <path d="M 40 25 Q 90 5 140 25 L 140 365 Q 90 345 40 365 Z"
+      <path d="M 40 25 Q 90 5 140 25 L 140 345 Q 90 325 40 345 Z"
             fill="url(#reflection)" />
     </svg>
     <div class="percentage" id="percentage">--%</div>
   </div>
   <div class="status" id="status"></div>
-  <div class="last-update">Last update: <span id="lastUpdate">--</span></div>
+  <div class="last-update">Last update: <span id="lastUpdate">--</span> seconds ago</div>
 </div>
 
 <script>
@@ -41,13 +47,15 @@ const statusEl = document.getElementById('status');
 const lastUpdateEl = document.getElementById('lastUpdate');
 
 let currentLevel = 0; 
+let targetLevel = 0;
 let waveOffset = 0;   
+let lastFetchTime = Date.now();
 
 function drawWave() {
-  const amplitude = 3; // subtle wave height
+  const amplitude = 3;
+  const height = 370 - (currentLevel / 100) * 330;
   const wavePoints = [];
-  const height = 370 - (currentLevel / 100) * 350;
-  
+
   for (let x = 30; x <= 170; x += 5) {
     const y = height + Math.sin((x / 20) + waveOffset) * amplitude;
     wavePoints.push(`${x},${y}`);
@@ -57,15 +65,18 @@ function drawWave() {
     wavePoints.map(p => `L${p}`).join(' ') +
     ` L170,370 Z`);
 
+  // Smoothly animate water level
+  currentLevel += (targetLevel - currentLevel) * 0.05;
+
   waveOffset += 0.03; 
   requestAnimationFrame(drawWave);
 }
 
 function updateTank(level) {
-  currentLevel = level;
+  targetLevel = level;
   percentageEl.textContent = level + '%';
   
-  // Set water color based on level
+  // Water color based on level
   let color;
   if (level >= 100) color = "rgba(0, 200, 0, 0.5)";
   else if (level >= 75) color = "rgba(0, 100, 255, 0.5)";
@@ -89,16 +100,22 @@ function fetchData() {
     .then(data => {
       const level = parseInt(data.field1);
       updateTank(level);
-      lastUpdateEl.textContent = new Date(data.created_at).toLocaleTimeString();
+      lastFetchTime = new Date(data.created_at).getTime();
     });
 }
 
-// Start wave animation
+function updateTimeSince() {
+  const secondsAgo = Math.floor((Date.now() - lastFetchTime) / 1000);
+  lastUpdateEl.textContent = secondsAgo >= 0 ? secondsAgo : '--';
+}
+
+// Start animations
 requestAnimationFrame(drawWave);
 
 // Fetch initial data and update every 10 seconds
 fetchData();
 setInterval(fetchData, 10000);
+setInterval(updateTimeSince, 1000);
 </script>
 </body>
 </html>

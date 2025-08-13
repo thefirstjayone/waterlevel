@@ -1,140 +1,269 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Zach & Jarrett's Water Tank Level</title>
 <style>
-    body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background-color: #121212;
-        color: white;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    h1 {
-        text-align: center;
-        margin-top: 20px;
-        font-size: 1.8em;
-        line-height: 1.2;
-    }
-    svg {
-        width: 200px;
-        height: 400px;
-        margin-top: 20px;
-    }
-    .water {
-        transition: transform 1s ease;
-        animation: ripple 6s infinite ease-in-out;
-    }
-    @keyframes ripple {
-        0%   { transform: translateY(0); }
-        25%  { transform: translateY(1px); }
-        50%  { transform: translateY(0); }
-        75%  { transform: translateY(-1px); }
-        100% { transform: translateY(0); }
-    }
-    .tank-outline {
-        fill: none;
-        stroke: #ccc;
-        stroke-width: 4px;
-        rx: 15;
-        ry: 15;
-    }
-    .info {
-        margin-top: 10px;
-        font-size: 1.2em;
-        text-align: center;
-    }
-    .warning {
-        color: red;
-        font-weight: bold;
-        animation: flash 1s infinite alternate;
-    }
-    @keyframes flash {
-        0% { color: red; }
-        100% { color: darkred; }
-    }
+  :root{
+    --tank-w: 220px;   /* fixed tank width */
+    --tank-h: 420px;   /* fixed tank height */
+  }
+  /* Page */
+  html,body{
+    height:100%;
+  }
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    background:#0e0f12;
+    color:#e9eef5;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+    gap:16px;
+    padding:20px 12px 32px;
+  }
+  h1{
+    margin:6px 0 0;
+    text-align:center;
+    line-height:1.15;
+    font-weight:700;
+    font-size: clamp(20px, 3.8vw, 28px);
+  }
+  .sub{
+    opacity:.85;
+    margin-top:2px;
+    font-size: clamp(18px, 3.4vw, 24px);
+    text-align:center;
+  }
+
+  /* Tank wrapper */
+  .tank-wrap{
+    width:var(--tank-w);
+    height:var(--tank-h);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    user-select:none;
+  }
+  /* The SVG itself is fixed size for consistency across refreshes */
+  svg{
+    width:var(--tank-w);
+    height:var(--tank-h);
+    display:block;
+  }
+
+  /* Outline is always on top */
+  .tank-outline{
+    fill:none;
+    stroke:#cfd6e4;
+    stroke-width:4px;
+  }
+
+  /* WATER BODY (fills entire tank height but scales from bottom) */
+  #waterRect{
+    transform-box: fill-box;
+    transform-origin: center bottom;
+    transition: transform 1.2s ease;
+    opacity:.55; /* translucent water */
+  }
+
+  /* Gentle surface wave group (we move it vertically in JS).
+     Inside it, the wave path shimmers horizontally via CSS. */
+  #surface{
+    opacity:.5;
+  }
+  .wave{
+    animation: waveMove 7s linear infinite;
+  }
+  @keyframes waveMove{
+    from{ transform: translateX(0); }
+    to  { transform: translateX(-24px); }
+  }
+
+  /* Subtle internal ripples (a light shimmer overlay) */
+  #ripples{
+    mix-blend-mode: screen;
+    opacity:.15;
+    animation: rippleDrift 9s linear infinite;
+  }
+  @keyframes rippleDrift{
+    from{ transform: translateX(0); }
+    to  { transform: translateX(30px); }
+  }
+
+  /* Reflection highlight on water (very subtle) */
+  #reflection{
+    opacity:.08;
+  }
+
+  /* Info texts */
+  .info{
+    text-align:center;
+    font-size:14px;
+    opacity:.9;
+  }
+  .warning{
+    color:#ff5454;
+    font-weight:700;
+    animation: warnFlash 1s infinite alternate;
+  }
+  @keyframes warnFlash{
+    from{ opacity:1; }
+    to  { opacity:.55; }
+  }
+
+  /* If level is very low (<=25%) we softly pulse the tank’s glow */
+  .low .tank-outline{
+    filter: drop-shadow(0 0 6px rgba(255,85,85,.3));
+  }
+
+  /* Mobile spacing */
+  @media (max-width:420px){
+    body{ padding-top:16px; }
+  }
 </style>
 </head>
 <body>
 
-<h1>Zach & Jarrett's<br>Water Tank Level</h1>
+<h1>Zach & Jarrett's</h1>
+<div class="sub">Water Tank Level</div>
 
-<svg viewBox="0 0 100 200">
-    <!-- Tank shape for clipping -->
+<div class="tank-wrap" id="tankWrap">
+  <svg viewBox="0 0 100 200" aria-label="Water tank">
     <defs>
-        <clipPath id="tankClip">
-            <rect x="10" y="10" width="80" height="180" rx="15" ry="15" />
-        </clipPath>
+      <!-- Tank rounded rectangle for clipping -->
+      <clipPath id="tankClip">
+        <rect x="10" y="10" width="80" height="180" rx="14" ry="14"/>
+      </clipPath>
+
+      <!-- A soft vertical gradient for the water body -->
+      <linearGradient id="waterShade" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.15"/>
+        <stop offset="100%" stop-color="#000000" stop-opacity="0.15"/>
+      </linearGradient>
     </defs>
 
-    <!-- Water inside clipPath -->
+    <!-- WATER: clipped fully inside the tank -->
     <g clip-path="url(#tankClip)">
-        <!-- Flat top water rectangle -->
-        <rect id="water" x="10" y="190" width="80" height="0" class="water" />
+      <!-- Base colored water body (we scaleY this from bottom in JS) -->
+      <rect id="waterRect" x="10" y="10" width="80" height="180" fill="#0096ff"/>
+
+      <!-- Subtle vertical shading over the water -->
+      <rect id="reflection" x="10" y="10" width="80" height="180" fill="url(#waterShade)"/>
+
+      <!-- Gentle wavy top surface:
+           We position this group to the current surface Y in JS.
+           The path itself is wider than the tank so horizontal shimmer loops cleanly. -->
+      <g id="surface">
+        <!-- main wave line (filled with the same water color but a touch lighter) -->
+        <path class="wave" id="wavePath"
+              d="M -20 0
+                 q 5 -1 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0
+                 v 190 h -110 z"
+              fill="#9fd2ff"/>
+        <!-- tiny ripple overlay lines (very subtle) -->
+        <path id="ripples"
+              d="M -20 1 q 5 -0.6 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0"
+              stroke="#ffffff" stroke-width="0.6" fill="none" />
+      </g>
     </g>
 
-    <!-- Tank outline always on top -->
-    <rect x="10" y="10" width="80" height="180" rx="15" ry="15" class="tank-outline"/>
-</svg>
+    <!-- TANK OUTLINE on top so water never overlaps border -->
+    <rect class="tank-outline" x="10" y="10" width="80" height="180" rx="14" ry="14"/>
+  </svg>
+</div>
 
-<div class="info" id="level-text">Loading...</div>
-<div class="info" id="update-time">Time since last update: 0s</div>
+<div class="info" id="levelText">Loading…</div>
+<div class="info" id="sinceText">Time since last update: 0s</div>
 
 <script>
-    let lastUpdate = Date.now();
+  // ThingSpeak details (confirmed)
+  const CHANNEL_ID = 3026172;
+  const READ_API_KEY = "AHHPO1T2TZDGZ2G8";
+  const FETCH_MS = 15000;
 
-    function updateTank(level) {
-        const water = document.getElementById("water");
-        const text = document.getElementById("level-text");
-        const height = (180 * level) / 100;
-        const y = 190 - height;
+  // Elements
+  const waterRect = document.getElementById('waterRect');
+  const surface = document.getElementById('surface');
+  const wavePath = document.getElementById('wavePath');
+  const tankWrap = document.getElementById('tankWrap');
+  const levelText = document.getElementById('levelText');
+  const sinceText = document.getElementById('sinceText');
 
-        water.setAttribute("height", height);
-        water.setAttribute("y", y);
+  let lastUpdate = Date.now();
+  let currentLevel = 0;
 
-        let color;
-        if (level >= 100) color = "#00ff00";
-        else if (level >= 75) color = "#0096ff";
-        else if (level >= 50) color = "#ffff00";
-        else if (level >= 25) color = "#ff6400";
-        else color = "#ff0000";
-        water.setAttribute("fill", color);
+  // Map level to translucent color
+  function colorForLevel(level){
+    if (level >= 100) return 'rgba(0,180,0,0.55)';        // green
+    if (level >= 75)  return 'rgba(0,130,220,0.55)';      // blue
+    if (level >= 50)  return 'rgba(210,200,0,0.55)';      // yellow
+    if (level >= 25)  return 'rgba(230,90,0,0.55)';       // orange-red
+    return 'rgba(230,30,30,0.55)';                        // red
+  }
 
-        if (level === 2) {
-            text.innerHTML = `<span class="warning">Colour Sensor Not Detected</span>`;
-        } else {
-            text.textContent = `Water Level: ${level}%`;
-        }
+  // Update visuals
+  function setLevel(level){
+    // clamp
+    level = Math.max(0, Math.min(100, level));
+    currentLevel = level;
 
-        lastUpdate = Date.now();
+    // Color updates
+    const fillColor = colorForLevel(level);
+    waterRect.setAttribute('fill', fillColor);
+    // Make wave a touch lighter than body
+    wavePath.setAttribute('fill', fillColor.replace('0.55','0.35'));
+
+    // Scale water body from bottom
+    const scale = level / 100;
+    waterRect.style.transform = `scaleY(${scale})`;
+
+    // Move the surface group to the current top Y
+    // Tank drawable height is 180 (from y=10 to y=190).
+    const yBase = 190 - 180 * scale; // current surface Y
+    surface.setAttribute('transform', `translate(0, ${yBase})`);
+
+    // Texts & low-level pulse
+    if (level === 2){
+      levelText.innerHTML = `<span class="warning">Colour Sensor Not Detected</span>`;
+    } else {
+      levelText.textContent = `Water Level: ${level}%`;
     }
+    tankWrap.classList.toggle('low', level <= 25);
 
-    function updateTimeSince() {
-        const seconds = Math.floor((Date.now() - lastUpdate) / 1000);
-        document.getElementById("update-time").textContent = `Time since last update: ${seconds}s`;
+    // Timestamp
+    lastUpdate = Date.now();
+  }
+
+  // Seconds since last update
+  setInterval(()=>{
+    const secs = Math.floor((Date.now() - lastUpdate)/1000);
+    sinceText.textContent = `Time since last update: ${secs}s`;
+  }, 1000);
+
+  // Fetch data from ThingSpeak
+  async function fetchLatest(){
+    try{
+      const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/fields/1/last.json?api_key=${READ_API_KEY}`;
+      const res = await fetch(url, { cache: 'no-cache' });
+      const data = await res.json();
+      const level = parseInt(data.field1);
+      if (!Number.isNaN(level)){
+        setLevel(level);
+      }
+    }catch(err){
+      // Silent fail is fine; UI will keep previous value and timer will run
+      console.error('ThingSpeak fetch error:', err);
     }
+  }
 
-    async function fetchData() {
-        try {
-            const res = await fetch("https://api.thingspeak.com/channels/3026172/fields/1/last.json?api_key=AHHPO1T2TZDGZ2G8");
-            const data = await res.json();
-            const level = parseInt(data.field1);
-            if (!isNaN(level)) {
-                updateTank(level);
-            }
-        } catch (e) {
-            console.error("Error fetching data", e);
-        }
-    }
-
-    setInterval(updateTimeSince, 1000);
-    setInterval(fetchData, 10000);
-
-    fetchData();
+  // Kick off
+  fetchLatest();
+  setInterval(fetchLatest, FETCH_MS);
 </script>
 
 </body>

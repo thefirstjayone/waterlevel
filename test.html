@@ -8,11 +8,12 @@
         html, body {
             height: 100%;
             margin: 0;
-            background-color: #e8f4f8;
+            background-color: #121212; /* dark background */
             display: flex;
             flex-direction: column;
             align-items: center;
             font-family: Arial, sans-serif;
+            color: #f0f0f0; /* light text */
         }
         h1 {
             margin-top: 20px;
@@ -22,14 +23,14 @@
         }
         #tank {
             width: 300px;
-            height: 500px; /* fixed height */
-            border: 6px solid #555;
-            border-radius: 150px / 40px; /* curved top & bottom */
+            height: 500px;
+            border: 6px solid #888;
+            border-radius: 150px / 40px;
             position: relative;
-            background-color: white;
+            background-color: #1e1e1e; /* dark tank interior */
             overflow: hidden;
             margin-top: 20px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.3);
+            box-shadow: 0 0 25px rgba(0,0,0,0.7);
         }
         #water {
             position: absolute;
@@ -38,17 +39,17 @@
             height: 0%;
             transition: height 1s ease;
         }
-        .green { background-color: green; }
-        .blue { background-color: blue; }
-        .yellow { background-color: yellow; }
-        .red { background-color: red; }
+        .green { background-color: #00e676; }
+        .blue { background-color: #2196f3; }
+        .yellow { background-color: #ffeb3b; }
+        .red { background-color: #f44336; }
         .flash {
             animation: flash 1s infinite;
         }
         @keyframes flash {
-            0% { background-color: red; }
+            0% { background-color: #f44336; }
             50% { background-color: transparent; }
-            100% { background-color: red; }
+            100% { background-color: #f44336; }
         }
         #levelText {
             margin-top: 20px;
@@ -58,7 +59,7 @@
         #updateTime {
             margin-top: 10px;
             font-size: 1em;
-            color: #666;
+            color: #aaa;
         }
     </style>
 </head>
@@ -75,8 +76,8 @@
     <div id="updateTime">Last updated: --</div>
 
     <script>
-        const channelID = "3026172"; // ThingSpeak Channel ID
-        const readAPIKey = "AHHPO1T2TZDGZ2G8"; // ThingSpeak Read API Key
+        const channelID = "3026172";
+        const readAPIKey = "AHHPO1T2TZDGZ2G8";
 
         let lastUpdateTime = null;
 
@@ -131,7 +132,7 @@
         }
 
         fetchLevel();
-        setInterval(fetchLevel, 15000); // every 15 seconds
+        setInterval(fetchLevel, 15000);
         setInterval(updateTimeSince, 1000);
     </script>
 </body>

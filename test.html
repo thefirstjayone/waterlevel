@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Water Tank Level</title>
+    <title>Zach & Jarrett's Water Tank Level</title>
     <style>
         html, body {
             height: 100%;
@@ -11,19 +11,23 @@
             background-color: #f0f0f0;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
             font-family: Arial, sans-serif;
         }
+        h1 {
+            margin-top: 20px;
+            font-size: 1.8em;
+            text-align: center;
+        }
         #tank {
-            width: 90%;
-            max-width: 300px;
+            width: 300px; /* fixed width */
             height: 60%;
             border: 3px solid #333;
             border-radius: 12px;
             position: relative;
             background-color: white;
             overflow: hidden;
+            margin-top: 20px;
         }
         #water {
             position: absolute;
@@ -57,6 +61,8 @@
     </style>
 </head>
 <body>
+    <h1>Zach & Jarrett's Water Tank Level</h1>
+
     <div id="tank">
         <div id="water" class="green"></div>
     </div>
@@ -125,7 +131,7 @@
 
         // Run after page load
         fetchLevel();
-        setInterval(fetchLevel, 20000); // every 20s
+        setInterval(fetchLevel, 15000); // every 15s
         setInterval(updateTimeSince, 1000); // update counter
     </script>
 </body>

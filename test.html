@@ -1,139 +1,253 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Zach & Jarrett's Water Tank Level</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  body {
-    background-color: #121212;
-    color: #fff;
-    font-family: Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-top: 20px;
+  :root{
+    --tank-w: 220px;
+    --tank-h: 440px;
+    --radius: 22px;
+    --outline: 4px;
+
+    /* water colour is injected via JS without restarting animations */
+    --water-color: rgba(0,130,220,.55); /* default blue (75%) */
   }
-  h1 {
-    text-align: center;
-    line-height: 1.2em;
-    margin-bottom: 20px;
+
+  /* PAGE */
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:#0f1115;
+    color:#e9eef5;
+    font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+    padding:20px 14px 32px;
   }
-  .tank {
-    position: relative;
-    width: 160px;
-    height: 320px;
-    border: 4px solid #ccc;
-    border-radius: 15px;
-    overflow: hidden;
-    background-color: rgba(255,255,255,0.05);
+  h1{
+    margin:6px 0 0;
+    text-align:center;
+    line-height:1.15;
+    font-weight:800;
+    letter-spacing:.2px;
+    font-size: clamp(20px, 3.8vw, 28px);
   }
-  .water {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    height: 0;
-    transition: height 1.5s ease-in-out;
-    background: rgba(0,150,255,0.4);
-    overflow: hidden;
+  .subtitle{
+    margin:0;
+    text-align:center;
+    font-size: clamp(18px, 3.4vw, 24px);
+    opacity:.9;
   }
-  .wave {
-    position: absolute;
-    bottom: 0;
-    width: 200%;
-    height: 200%;
-    background: rgba(0,150,255,0.4);
-    border-radius: 40%;
-    opacity: 0.6;
-    animation: waveMove 8s linear infinite;
+
+  /* TANK */
+  .tank-wrap{
+    width:var(--tank-w);
+    height:var(--tank-h);
+    position:relative;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
   }
-  .wave:nth-child(2) {
-    opacity: 0.4;
-    animation: waveMove 12s linear infinite;
+  .tank{
+    position:relative;
+    width:100%;
+    height:100%;
+    border-radius:var(--radius);
+    background:#262b35;                 /* dark tank body */
+    overflow:hidden;                     /* clip water & waves inside */
+    box-shadow: inset 0 0 28px rgba(0,0,0,.55);
+    isolation:isolate;
   }
-  @keyframes waveMove {
-    from { transform: translateX(0); }
-    to { transform: translateX(-50%); }
+  /* Outline on top so water never covers it */
+  .tank::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:var(--radius);
+    border: var(--outline) solid #cfd6e4;
+    pointer-events:none;
   }
-  .last-update {
-    margin-top: 15px;
-    font-size: 0.9em;
-    color: #ccc;
+
+  /* WATER FILL (smooth rise/fall) */
+  #water{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    height:0%;
+    background: var(--water-color);
+    transition: height 1.25s ease;   /* smooth on every change */
+    will-change: height;
+    overflow:visible;
   }
-  .warning {
-    color: #ff5555;
-    font-weight: bold;
-    margin-top: 10px;
-    font-size: 1.1em;
+  /* Subtle vertical shading inside water (for depth) */
+  #water::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background: linear-gradient(to top, rgba(255,255,255,.12), rgba(0,0,0,.12));
+    pointer-events:none;
+    mix-blend-mode: overlay;
+  }
+
+  /* SURFACE WAVES (stay at water top, keep moving smoothly) */
+  .surface{
+    position:absolute;
+    left:0; right:0;
+    top:-10px;           /* slightly above for overlap */
+    height:16px;
+    pointer-events:none;
+  }
+  .surface > .wave{
+    position:absolute;
+    top:0; left:0;
+    width:260%;          /* wide tile for seamless loop */
+    height:100%;
+    background-color: var(--water-color); /* tinted via CSS variable */
+    opacity:.26;
+    /* Sine-like mask so only a thin wavy cap is visible */
+    -webkit-mask-image: url("data:image/svg+xml;utf8,<?xml version='1.0' encoding='UTF-8'?><svg xmlns='http://www.w3.org/2000/svg' width='220' height='16' viewBox='0 0 220 16'><path d='M0 8 C 55 4, 55 12, 110 8 S 165 12, 220 8 V16 H0 Z' fill='white'/></svg>");
+    mask-image: url("data:image/svg+xml;utf8,<?xml version='1.0' encoding='UTF-8'?><svg xmlns='http://www.w3.org/2000/svg' width='220' height='16' viewBox='0 0 220 16'><path d='M0 8 C 55 4, 55 12, 110 8 S 165 12, 220 8 V16 H0 Z' fill='white'/></svg>");
+    background-repeat: repeat-x;
+    background-size: 220px 16px;
+    animation: driftA 9s linear infinite;
+    will-change: transform;
+  }
+  .surface > .wave.back{
+    top:3px;
+    opacity:.20;
+    background-size: 180px 14px;
+    animation: driftB 12s linear infinite;
+  }
+  @keyframes driftA{
+    from{ transform: translateX(0) }
+    to  { transform: translateX(-220px) }
+  }
+  @keyframes driftB{
+    from{ transform: translateX(0) }
+    to  { transform: translateX(-180px) }
+  }
+
+  /* LOW-LEVEL cue (soft glow on outline) */
+  .low .tank::after{
+    box-shadow: 0 0 10px rgba(255,72,72,.35);
+    border-color: #ffd3d3;
+  }
+
+  /* INFO */
+  .info{
+    text-align:center;
+    font-size:14px;
+    opacity:.95;
+  }
+  .warning{
+    color:#ff5c5c;
+    font-weight:700;
+    animation: warnPulse 1.2s ease-in-out infinite alternate;
+  }
+  @keyframes warnPulse{
+    from{ opacity:1 }
+    to  { opacity:.55 }
+  }
+
+  /* Mobile */
+  @media (max-width:420px){
+    :root{ --tank-w: 78vw; --tank-h: 150vw; }
   }
 </style>
 </head>
 <body>
-  <h1>Zach & Jarrett's<br>Water Tank Level</h1>
 
+<h1>Zach &amp; Jarrett's</h1>
+<p class="subtitle">Water Tank Level</p>
+
+<div id="tankWrap" class="tank-wrap">
   <div class="tank">
-    <div class="water" id="water">
-      <div class="wave"></div>
-      <div class="wave"></div>
+    <!-- Water body -->
+    <div id="water">
+      <!-- Surface waves live *inside* the water so they ride with the level -->
+      <div class="surface">
+        <div class="wave"></div>
+        <div class="wave back"></div>
+      </div>
     </div>
   </div>
+</div>
 
-  <div class="last-update" id="lastUpdate">Loading...</div>
-  <div class="warning" id="warning"></div>
+<div id="status" class="info">Loading…</div>
+<div id="since" class="info">Time since last update: 0s</div>
 
 <script>
-const channelID = 3026172;
-const readAPIKey = "AHHPO1T2TZDGZ2G8";
+  // ThingSpeak config (yours)
+  const CHANNEL_ID   = 3026172;
+  const READ_API_KEY = "AHHPO1T2TZDGZ2G8";
+  const REFRESH_MS   = 15000;
 
-function updateWaterLevel(level) {
-  const water = document.getElementById("water");
-  const warning = document.getElementById("warning");
+  const tankWrap = document.getElementById('tankWrap');
+  const waterEl  = document.getElementById('water');
+  const statusEl = document.getElementById('status');
+  const sinceEl  = document.getElementById('since');
 
-  // Level colours
-  let color;
-  if (level >= 100) color = "rgba(0,255,0,0.4)";   // green
-  else if (level >= 75) color = "rgba(0,150,255,0.4)"; // blue
-  else if (level >= 50) color = "rgba(255,255,0,0.4)"; // yellow
-  else color = "rgba(255,0,0,0.4)";                   // red
+  let lastUpdate = Date.now();
+  let currentLevel = 0;
 
-  water.style.background = color;
-  water.querySelectorAll('.wave').forEach(w => w.style.background = color);
-
-  // Set height
-  water.style.height = `${level}%`;
-
-  // Sensor warning
-  if (level === 2) {
-    warning.textContent = "Colour Sensor Not Detected";
-  } else {
-    warning.textContent = "";
+  function colorForLevel(level){
+    if (level >= 100) return 'rgba(0,180,0,0.55)';   // green
+    if (level >= 75)  return 'rgba(0,130,220,0.55)'; // blue
+    if (level >= 50)  return 'rgba(210,200,0,0.55)'; // yellow
+    if (level >= 25)  return 'rgba(230,90,0,0.55)';  // orange-red
+    return 'rgba(230,40,40,0.55)';                   // red
   }
-}
 
-function secondsSince(dateStr) {
-  const then = new Date(dateStr);
-  const now = new Date();
-  return Math.floor((now - then) / 1000);
-}
+  function setLevel(level){
+    level = Math.max(0, Math.min(100, level));
+    currentLevel = level;
 
-async function fetchData() {
-  try {
-    const url = `https://api.thingspeak.com/channels/${channelID}/feeds.json?results=1&api_key=${readAPIKey}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    const feed = data.feeds[0];
-    const level = parseInt(feed.field1) || 0;
-    updateWaterLevel(level);
+    // Smooth height animation (CSS transition handles it)
+    waterEl.style.height = `${level}%`;
 
-    document.getElementById("lastUpdate").textContent =
-      `Updated ${secondsSince(feed.created_at)} seconds ago`;
-  } catch (e) {
-    console.error("Error fetching data", e);
+    // Update the water colour via CSS variable (doesn't restart animations)
+    document.documentElement.style.setProperty('--water-color', colorForLevel(level));
+
+    // Low-level glow
+    tankWrap.classList.toggle('low', level <= 25);
+
+    // Text / warning
+    if (level === 2){
+      statusEl.innerHTML = `<span class="warning">Colour Sensor Not Detected</span>`;
+    } else {
+      statusEl.textContent = `Water Level: ${level}%`;
+    }
+
+    lastUpdate = Date.now();
   }
-}
 
-fetchData();
-setInterval(fetchData, 15000);
+  async function fetchLatest(){
+    try{
+      const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/fields/1/last.json?api_key=${READ_API_KEY}`;
+      const res = await fetch(url, { cache: 'no-store' });
+      const data = await res.json();
+      const lvl = parseInt(data.field1, 10);
+      if (!Number.isNaN(lvl)){
+        setLevel(lvl);
+      }
+    }catch(err){
+      console.error('ThingSpeak fetch error:', err);
+    }
+  }
+
+  // Seconds since last update
+  setInterval(()=>{
+    const secs = Math.floor((Date.now() - lastUpdate)/1000);
+    sinceEl.textContent = `Time since last update: ${secs}s`;
+  }, 1000);
+
+  // Start
+  fetchLatest();
+  setInterval(fetchLatest, REFRESH_MS);
 </script>
+
 </body>
 </html>

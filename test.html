@@ -4,136 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zach & Jarrett's Water Tank Level</title>
-    <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-            background-color: #121212; /* dark background */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            font-family: Arial, sans-serif;
-            color: #f0f0f0; /* light text */
-        }
-        h1 {
-            margin-top: 20px;
-            font-size: 1.8em;
-            text-align: center;
-            line-height: 1.2em;
-        }
-        #tank {
-            width: 300px;
-            height: 500px;
-            border: 6px solid #888;
-            border-radius: 150px / 40px;
-            position: relative;
-            background-color: #1e1e1e; /* dark tank interior */
-            overflow: hidden;
-            margin-top: 20px;
-            box-shadow: 0 0 25px rgba(0,0,0,0.7);
-        }
-        #water {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 0%;
-            transition: height 1s ease;
-        }
-        .green { background-color: #00e676; }
-        .blue { background-color: #2196f3; }
-        .yellow { background-color: #ffeb3b; }
-        .red { background-color: #f44336; }
-        .flash {
-            animation: flash 1s infinite;
-        }
-        @keyframes flash {
-            0% { background-color: #f44336; }
-            50% { background-color: transparent; }
-            100% { background-color: #f44336; }
-        }
-        #levelText {
-            margin-top: 20px;
-            font-size: 2em;
-            font-weight: bold;
-        }
-        #updateTime {
-            margin-top: 10px;
-            font-size: 1em;
-            color: #aaa;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>
-        Zach & Jarrett's<br>
-        Water Tank Level
-    </h1>
-
-    <div id="tank">
-        <div id="water" class="green"></div>
+    <h1>Zach & Jarrett's<br>Water Tank Level</h1>
+    <div id="tank-container">
+        <div id="tank">
+            <div id="water"></div>
+        </div>
+        <div id="percentage"></div>
+        <div id="sensor-status"></div>
     </div>
-    <div id="levelText">--%</div>
-    <div id="updateTime">Last updated: --</div>
+    <p id="last-update">Last update: --</p>
 
-    <script>
-        const channelID = "3026172";
-        const readAPIKey = "AHHPO1T2TZDGZ2G8";
-
-        let lastUpdateTime = null;
-
-        function updateTank(level) {
-            const waterDiv = document.getElementById("water");
-            const levelText = document.getElementById("levelText");
-
-            waterDiv.style.height = `${level}%`;
-
-            if (level === 2) {
-                levelText.textContent = "Colour Sensor Not Detected";
-                waterDiv.className = "red flash";
-            } else {
-                levelText.textContent = `${level}%`;
-                waterDiv.className = "";
-
-                if (level >= 100) {
-                    waterDiv.classList.add("green");
-                } else if (level >= 75) {
-                    waterDiv.classList.add("blue");
-                } else if (level >= 50) {
-                    waterDiv.classList.add("yellow");
-                } else if (level >= 25) {
-                    waterDiv.classList.add("red");
-                } else {
-                    waterDiv.classList.add("red", "flash");
-                }
-            }
-        }
-
-        function fetchLevel() {
-            const url = `https://api.thingspeak.com/channels/${channelID}/fields/1/last.json?api_key=${readAPIKey}`;
-
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    const level = parseFloat(data.field1) || 0;
-                    updateTank(level);
-                    lastUpdateTime = Date.now();
-                })
-                .catch(error => {
-                    console.error("Error fetching data:", error);
-                });
-        }
-
-        function updateTimeSince() {
-            const updateTimeDiv = document.getElementById("updateTime");
-            if (lastUpdateTime) {
-                const secondsAgo = Math.floor((Date.now() - lastUpdateTime) / 1000);
-                updateTimeDiv.textContent = `Last updated: ${secondsAgo} second${secondsAgo !== 1 ? 's' : ''} ago`;
-            }
-        }
-
-        fetchLevel();
-        setInterval(fetchLevel, 15000);
-        setInterval(updateTimeSince, 1000);
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>

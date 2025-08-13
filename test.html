@@ -1,26 +1,135 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zach & Jarrett's Water Tank Level</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zach & Jarrett's Water Tank Level</title>
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background-color: #121212;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        height: 100vh;
+        overflow: hidden;
+    }
+    h1 {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 1.8em;
+        line-height: 1.2;
+    }
+    svg {
+        width: 200px;
+        height: 400px;
+        margin-top: 20px;
+    }
+    .tank-outline {
+        fill: none;
+        stroke: #ccc;
+        stroke-width: 4px;
+        rx: 15;
+        ry: 15;
+    }
+    .water {
+        transition: height 1s ease, y 1s ease;
+        fill-opacity: 0.5;
+        animation: ripple 4s infinite linear;
+    }
+    @keyframes ripple {
+        0% { transform: translateY(0px) }
+        50% { transform: translateY(2px) }
+        100% { transform: translateY(0px) }
+    }
+    .info {
+        margin-top: 10px;
+        font-size: 1.2em;
+        text-align: center;
+    }
+    .warning {
+        color: red;
+        font-weight: bold;
+        animation: flash 1s infinite alternate;
+    }
+    @keyframes flash {
+        0% { color: red; }
+        100% { color: darkred; }
+    }
+</style>
 </head>
 <body>
-    <div class="title">
-        Zach & Jarrett's<br>Water Tank Level
-    </div>
-    
-    <div class="tank-container">
-        <div class="tank">
-            <div class="water" id="water"></div>
-            <div class="reflection"></div>
-        </div>
-    </div>
 
-    <div id="status"></div>
-    <div id="last-update">Last update: <span id="update-seconds">0</span> seconds ago</div>
+<h1>Zach & Jarrett's<br>Water Tank Level</h1>
 
-    <script src="script.js"></script>
+<svg viewBox="0 0 100 200">
+    <rect x="10" y="10" width="80" height="180" rx="15" ry="15" class="tank-outline"/>
+    <rect id="water" x="10" y="190" width="80" height="0" rx="15" ry="15" class="water"/>
+</svg>
+
+<div class="info" id="level-text">Loading...</div>
+<div class="info" id="update-time">Time since last update: 0s</div>
+
+<script>
+    let lastUpdate = Date.now();
+    let updateInterval = null;
+
+    function updateTank(level) {
+        const water = document.getElementById("water");
+        const text = document.getElementById("level-text");
+        const height = (180 * level) / 100;
+        const y = 190 - height;
+
+        water.setAttribute("height", height);
+        water.setAttribute("y", y);
+
+        // Set water colour
+        let color;
+        if (level >= 100) color = "rgba(0, 255, 0, 0.5)";
+        else if (level >= 75) color = "rgba(0, 150, 255, 0.5)";
+        else if (level >= 50) color = "rgba(255, 255, 0, 0.5)";
+        else if (level >= 25) color = "rgba(255, 100, 0, 0.5)";
+        else color = "rgba(255, 0, 0, 0.5)";
+        water.setAttribute("fill", color);
+
+        // Update text
+        if (level === 2) {
+            text.innerHTML = `<span class="warning">Colour Sensor Not Detected</span>`;
+        } else {
+            text.textContent = `Water Level: ${level}%`;
+        }
+
+        lastUpdate = Date.now();
+    }
+
+    function updateTimeSince() {
+        const seconds = Math.floor((Date.now() - lastUpdate) / 1000);
+        document.getElementById("update-time").textContent = `Time since last update: ${seconds}s`;
+    }
+
+    async function fetchData() {
+        try {
+            const res = await fetch("https://api.thingspeak.com/channels/3026172/fields/1/last.json?api_key=AHHPO1T2TZDGZ2G8");
+            const data = await res.json();
+            const level = parseInt(data.field1);
+            if (!isNaN(level)) {
+                updateTank(level);
+            }
+        } catch (e) {
+            console.error("Error fetching data", e);
+        }
+    }
+
+    // Start timer
+    setInterval(updateTimeSince, 1000);
+    setInterval(fetchData, 10000); // every 10 seconds
+
+    // Initial fetch
+    fetchData();
+</script>
+
 </body>
 </html>

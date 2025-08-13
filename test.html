@@ -13,9 +13,6 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: flex-start;
-        height: 100vh;
-        overflow: hidden;
     }
     h1 {
         text-align: center;
@@ -29,16 +26,15 @@
         margin-top: 20px;
     }
     .water {
-        transition: height 1s ease, y 1s ease;
-        fill-opacity: 0.5;
+        transition: transform 1s ease;
         animation: ripple 6s infinite ease-in-out;
     }
     @keyframes ripple {
-        0%   { transform: translateY(0px); }
+        0%   { transform: translateY(0); }
         25%  { transform: translateY(1px); }
-        50%  { transform: translateY(0px); }
+        50%  { transform: translateY(0); }
         75%  { transform: translateY(-1px); }
-        100% { transform: translateY(0px); }
+        100% { transform: translateY(0); }
     }
     .tank-outline {
         fill: none;
@@ -46,7 +42,6 @@
         stroke-width: 4px;
         rx: 15;
         ry: 15;
-        pointer-events: none;
     }
     .info {
         margin-top: 10px;
@@ -69,9 +64,20 @@
 <h1>Zach & Jarrett's<br>Water Tank Level</h1>
 
 <svg viewBox="0 0 100 200">
-    <!-- Water first -->
-    <rect id="water" x="12" y="190" width="76" height="0" rx="12" ry="12" class="water"/>
-    <!-- Tank outline drawn on top -->
+    <!-- Tank shape for clipping -->
+    <defs>
+        <clipPath id="tankClip">
+            <rect x="10" y="10" width="80" height="180" rx="15" ry="15" />
+        </clipPath>
+    </defs>
+
+    <!-- Water inside clipPath -->
+    <g clip-path="url(#tankClip)">
+        <!-- Flat top water rectangle -->
+        <rect id="water" x="10" y="190" width="80" height="0" class="water" />
+    </g>
+
+    <!-- Tank outline always on top -->
     <rect x="10" y="10" width="80" height="180" rx="15" ry="15" class="tank-outline"/>
 </svg>
 
@@ -91,11 +97,11 @@
         water.setAttribute("y", y);
 
         let color;
-        if (level >= 100) color = "rgba(0, 255, 0, 0.5)";
-        else if (level >= 75) color = "rgba(0, 150, 255, 0.5)";
-        else if (level >= 50) color = "rgba(255, 255, 0, 0.5)";
-        else if (level >= 25) color = "rgba(255, 100, 0, 0.5)";
-        else color = "rgba(255, 0, 0, 0.5)";
+        if (level >= 100) color = "#00ff00";
+        else if (level >= 75) color = "#0096ff";
+        else if (level >= 50) color = "#ffff00";
+        else if (level >= 25) color = "#ff6400";
+        else color = "#ff0000";
         water.setAttribute("fill", color);
 
         if (level === 2) {

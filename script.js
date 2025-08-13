@@ -1,45 +1,68 @@
-// ThingSpeak config
-const channelID = 3026172; // your channel ID
-const readAPIKey = "AHHPO1T2TZDGZ2G8"; // your read API key
-const fieldNumber = 1; // assuming field1 holds the water level
+const tank = document.getElementById("tank");
+const water = document.getElementById("water");
+const percentageText = document.getElementById("percentage");
+const sensorStatus = document.getElementById("sensor-status");
+const lastUpdateEl = document.getElementById("last-update");
 
-function fetchWaterLevel() {
-  fetch(`https://api.thingspeak.com/channels/${channelID}/fields/${fieldNumber}/last.json?api_key=${readAPIKey}`)
-    .then(response => response.json())
-    .then(data => {
-      const level = parseFloat(data.field1);
-      updateTank(level);
-    })
-    .catch(err => console.error("Error fetching data:", err));
-}
+let lastUpdateTime = null;
 
 function updateTank(level) {
-  const water = document.querySelector('.water');
-  const levelText = document.querySelector('.level-text');
+    // Set water color
+    if (level >= 100) {
+        water.style.backgroundColor = "#00ff00"; // green
+    } else if (level >= 75) {
+        water.style.backgroundColor = "#0000ff"; // blue
+    } else if (level >= 50) {
+        water.style.backgroundColor = "#ffff00"; // yellow
+    } else if (level >= 25) {
+        water.style.backgroundColor = "#ff0000"; // red
+    } else {
+        water.style.backgroundColor = "#ff0000"; // red (low)
+        water.classList.add("flash");
+    }
 
-  // Update height
-  water.style.height = Math.min(level, 100) + '%';
+    if (level >= 25) {
+        water.classList.remove("flash");
+    }
 
-  // Update text
-  levelText.textContent = `Water Level: ${level}%`;
+    // Adjust water height
+    water.style.height = level + "%";
 
-  // Remove all color/flash classes
-  water.classList.remove('green', 'blue', 'yellow', 'red', 'flash');
+    // Update percentage text
+    percentageText.textContent = level + "%";
 
-  // Assign color based on level
-  if (level >= 100) {
-    water.classList.add('green');
-  } else if (level >= 75) {
-    water.classList.add('blue');
-  } else if (level >= 50) {
-    water.classList.add('yellow');
-  } else if (level >= 25) {
-    water.classList.add('red');
-  } else {
-    water.classList.add('red', 'flash'); // below 25% = flashing red
-  }
+    // Show sensor status if exactly 2%
+    if (level === 2) {
+        sensorStatus.textContent = "Colour Sensor Not Detected";
+    } else {
+        sensorStatus.textContent = "";
+    }
 }
 
-// Refresh every 15 seconds
-setInterval(fetchWaterLevel, 15000);
-fetchWaterLevel();
+function fetchData() {
+    fetch("https://api.thingspeak.com/channels/3026172/fields/1/last.json?api_key=AHHPO1T2TZDGZ2G8")
+        .then(response => response.json())
+        .then(data => {
+            const level = parseInt(data.field1);
+            updateTank(level);
+
+            lastUpdateTime = new Date();
+            updateLastUpdateDisplay();
+        })
+        .catch(error => {
+            console.error("Error fetching data:", error);
+        });
+}
+
+function updateLastUpdateDisplay() {
+    if (!lastUpdateTime) return;
+
+    const secondsAgo = Math.floor((new Date() - lastUpdateTime) / 1000);
+    lastUpdateEl.textContent = `Last update: ${secondsAgo} seconds ago`;
+}
+
+setInterval(fetchData, 10000); // refresh every 10 seconds
+setInterval(updateLastUpdateDisplay, 1000); // update counter every second
+
+// Initial load
+fetchData();

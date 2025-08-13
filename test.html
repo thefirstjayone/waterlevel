@@ -28,32 +28,41 @@ const waterEl = document.getElementById('water');
 const statusEl = document.getElementById('status');
 const lastUpdateEl = document.getElementById('lastUpdate');
 
+let currentLevel = 0; // Store current water percentage
+let waveOffset = 0;   // Wave phase offset for smooth animation
+
+function drawWave() {
+  const amplitude = 3; // small gentle wave
+  const wavePoints = [];
+  const height = 370 - (currentLevel / 100) * 350;
+  
+  for (let x = 30; x <= 170; x += 5) {
+    const y = height + Math.sin((x / 20) + waveOffset) * amplitude;
+    wavePoints.push(`${x},${y}`);
+  }
+  
+  waterEl.setAttribute("d", `M30,370 L30,${wavePoints[0].split(',')[1]} ` +
+    wavePoints.map(p => `L${p}`).join(' ') +
+    ` L170,370 Z`);
+
+  waveOffset += 0.03; // controls wave speed
+  requestAnimationFrame(drawWave);
+}
+
 function updateTank(level) {
+  currentLevel = level;
   percentageEl.textContent = level + '%';
   
-  // Set color by level
+  // Set water color
   let color;
   if (level >= 100) color = "rgba(0, 200, 0, 0.5)";
   else if (level >= 75) color = "rgba(0, 100, 255, 0.5)";
   else if (level >= 50) color = "rgba(255, 200, 0, 0.5)";
-  else if (level >= 25) color = "rgba(255, 0, 0, 0.5)";
+  else if (level >= 25) color = "rgba(255, 100, 0, 0.5)";
   else color = "rgba(255, 0, 0, 0.5)";
 
   waterEl.setAttribute("fill", color);
 
-  // Draw wave path (subtle slosh)
-  const amplitude = 3; // subtle
-  const frequency = 2;
-  const height = 370 - (level / 100) * 350;
-  const wavePoints = [];
-  for (let x = 30; x <= 170; x += 5) {
-    const y = height + Math.sin((x / 20) + Date.now() / 1000) * amplitude;
-    wavePoints.push(`${x},${y}`);
-  }
-  waterEl.setAttribute("d", `M30,370 L30,${wavePoints[0].split(',')[1]} ` +
-    wavePoints.map(p => `L${p}`).join(' ') +
-    ` L170,370 Z`);
-  
   // Status text for 2%
   if (level === 2) {
     statusEl.textContent = "Colour Sensor Not Detected";
@@ -73,8 +82,12 @@ function fetchData() {
     });
 }
 
-setInterval(fetchData, 10000); // refresh every 10 sec
+// Start animation
+requestAnimationFrame(drawWave);
+
+// Fetch initial data and update every 10 seconds
 fetchData();
+setInterval(fetchData, 10000);
 </script>
 </body>
 </html>

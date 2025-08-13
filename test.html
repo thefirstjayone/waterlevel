@@ -10,12 +10,9 @@
     --tank-h: 440px;
     --radius: 22px;
     --outline: 4px;
-
-    /* water colour is injected via JS without restarting animations */
-    --water-color: rgba(0,130,220,.55); /* default blue (75%) */
+    --water-color: rgba(0,130,220,.55);
   }
 
-  /* PAGE */
   html,body{height:100%}
   body{
     margin:0;
@@ -43,7 +40,14 @@
     opacity:.9;
   }
 
-  /* TANK */
+  /* Percentage above tank */
+  #levelText {
+    font-size: clamp(20px, 4vw, 28px);
+    font-weight: 700;
+    margin: 4px 0 0;
+    text-align: center;
+  }
+
   .tank-wrap{
     width:var(--tank-w);
     height:var(--tank-h);
@@ -57,12 +61,11 @@
     width:100%;
     height:100%;
     border-radius:var(--radius);
-    background:#262b35;                 /* dark tank body */
-    overflow:hidden;                     /* clip water & waves inside */
+    background:#262b35;
+    overflow:hidden;
     box-shadow: inset 0 0 28px rgba(0,0,0,.55);
     isolation:isolate;
   }
-  /* Outline on top so water never covers it */
   .tank::after{
     content:"";
     position:absolute;
@@ -71,18 +74,14 @@
     border: var(--outline) solid #cfd6e4;
     pointer-events:none;
   }
-
-  /* WATER FILL (smooth rise/fall) */
   #water{
     position:absolute;
     left:0; right:0; bottom:0;
     height:0%;
     background: var(--water-color);
-    transition: height 1.25s ease;   /* smooth on every change */
+    transition: height 1.25s ease;
     will-change: height;
-    overflow:visible;
   }
-  /* Subtle vertical shading inside water (for depth) */
   #water::before{
     content:"";
     position:absolute;
@@ -91,29 +90,25 @@
     pointer-events:none;
     mix-blend-mode: overlay;
   }
-
-  /* SURFACE WAVES (stay at water top, keep moving smoothly) */
   .surface{
     position:absolute;
     left:0; right:0;
-    top:-10px;           /* slightly above for overlap */
+    top:-10px;
     height:16px;
     pointer-events:none;
   }
   .surface > .wave{
     position:absolute;
     top:0; left:0;
-    width:260%;          /* wide tile for seamless loop */
+    width:260%;
     height:100%;
-    background-color: var(--water-color); /* tinted via CSS variable */
+    background-color: var(--water-color);
     opacity:.26;
-    /* Sine-like mask so only a thin wavy cap is visible */
     -webkit-mask-image: url("data:image/svg+xml;utf8,<?xml version='1.0' encoding='UTF-8'?><svg xmlns='http://www.w3.org/2000/svg' width='220' height='16' viewBox='0 0 220 16'><path d='M0 8 C 55 4, 55 12, 110 8 S 165 12, 220 8 V16 H0 Z' fill='white'/></svg>");
     mask-image: url("data:image/svg+xml;utf8,<?xml version='1.0' encoding='UTF-8'?><svg xmlns='http://www.w3.org/2000/svg' width='220' height='16' viewBox='0 0 220 16'><path d='M0 8 C 55 4, 55 12, 110 8 S 165 12, 220 8 V16 H0 Z' fill='white'/></svg>");
     background-repeat: repeat-x;
     background-size: 220px 16px;
     animation: driftA 9s linear infinite;
-    will-change: transform;
   }
   .surface > .wave.back{
     top:3px;
@@ -129,14 +124,10 @@
     from{ transform: translateX(0) }
     to  { transform: translateX(-180px) }
   }
-
-  /* LOW-LEVEL cue (soft glow on outline) */
   .low .tank::after{
     box-shadow: 0 0 10px rgba(255,72,72,.35);
     border-color: #ffd3d3;
   }
-
-  /* INFO */
   .info{
     text-align:center;
     font-size:14px;
@@ -151,8 +142,6 @@
     from{ opacity:1 }
     to  { opacity:.55 }
   }
-
-  /* Mobile */
   @media (max-width:420px){
     :root{ --tank-w: 78vw; --tank-h: 150vw; }
   }
@@ -162,12 +151,11 @@
 
 <h1>Zach &amp; Jarrett's</h1>
 <p class="subtitle">Water Tank Level</p>
+<div id="levelText">Loading…</div>
 
 <div id="tankWrap" class="tank-wrap">
   <div class="tank">
-    <!-- Water body -->
     <div id="water">
-      <!-- Surface waves live *inside* the water so they ride with the level -->
       <div class="surface">
         <div class="wave"></div>
         <div class="wave back"></div>
@@ -180,7 +168,6 @@
 <div id="since" class="info">Time since last update: 0s</div>
 
 <script>
-  // ThingSpeak config (yours)
   const CHANNEL_ID   = 3026172;
   const READ_API_KEY = "AHHPO1T2TZDGZ2G8";
   const REFRESH_MS   = 15000;
@@ -189,38 +176,31 @@
   const waterEl  = document.getElementById('water');
   const statusEl = document.getElementById('status');
   const sinceEl  = document.getElementById('since');
+  const levelText = document.getElementById('levelText');
 
   let lastUpdate = Date.now();
-  let currentLevel = 0;
 
   function colorForLevel(level){
-    if (level >= 100) return 'rgba(0,180,0,0.55)';   // green
-    if (level >= 75)  return 'rgba(0,130,220,0.55)'; // blue
-    if (level >= 50)  return 'rgba(210,200,0,0.55)'; // yellow
-    if (level >= 25)  return 'rgba(230,90,0,0.55)';  // orange-red
-    return 'rgba(230,40,40,0.55)';                   // red
+    if (level >= 100) return 'rgba(0,180,0,0.55)';
+    if (level >= 75)  return 'rgba(0,130,220,0.55)';
+    if (level >= 50)  return 'rgba(210,200,0,0.55)';
+    if (level >= 25)  return 'rgba(230,90,0,0.55)';
+    return 'rgba(230,40,40,0.55)';
   }
 
   function setLevel(level){
     level = Math.max(0, Math.min(100, level));
-    currentLevel = level;
-
-    // Smooth height animation (CSS transition handles it)
     waterEl.style.height = `${level}%`;
-
-    // Update the water colour via CSS variable (doesn't restart animations)
     document.documentElement.style.setProperty('--water-color', colorForLevel(level));
-
-    // Low-level glow
     tankWrap.classList.toggle('low', level <= 25);
 
-    // Text / warning
     if (level === 2){
-      statusEl.innerHTML = `<span class="warning">Colour Sensor Not Detected</span>`;
+      levelText.innerHTML = `<span class="warning">Colour Sensor Not Detected</span>`;
     } else {
-      statusEl.textContent = `Water Level: ${level}%`;
+      levelText.textContent = `${level}%`;
     }
 
+    statusEl.textContent = `Water Level: ${level}%`;
     lastUpdate = Date.now();
   }
 
@@ -238,13 +218,11 @@
     }
   }
 
-  // Seconds since last update
   setInterval(()=>{
     const secs = Math.floor((Date.now() - lastUpdate)/1000);
     sinceEl.textContent = `Time since last update: ${secs}s`;
   }, 1000);
 
-  // Start
   fetchLatest();
   setInterval(fetchLatest, REFRESH_MS);
 </script>

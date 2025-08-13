@@ -91,7 +91,7 @@
   <div class="tank-container">
     <div class="fill" id="fill"></div>
     <div class="segments">
-      <div id="seg100" class="segment inactive">100%, background: linear-gradient(to top, #000000, #66ccff);</div>
+      <div id="seg100" class="segment inactive">100%</div>
       <div id="seg75" class="segment inactive">75%</div>
       <div id="seg50" class="segment inactive">50%</div>
       <div id="seg25" class="segment inactive">25%</div>
@@ -128,7 +128,7 @@
 
       const fill = document.getElementById('fill');
       let fillHeight = 0;
-      if (level === 100) fillHeight = 100;
+      if (level === 100) fillHeight = 10;
       else if (level === 75) fillHeight = 75;
       else if (level === 50) fillHeight = 50;
       else if (level === 25) fillHeight = 25;

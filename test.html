@@ -28,23 +28,25 @@
         height: 400px;
         margin-top: 20px;
     }
+    .water {
+        transition: height 1s ease, y 1s ease;
+        fill-opacity: 0.5;
+        animation: ripple 6s infinite ease-in-out;
+    }
+    @keyframes ripple {
+        0%   { transform: translateY(0px); }
+        25%  { transform: translateY(1px); }
+        50%  { transform: translateY(0px); }
+        75%  { transform: translateY(-1px); }
+        100% { transform: translateY(0px); }
+    }
     .tank-outline {
         fill: none;
         stroke: #ccc;
         stroke-width: 4px;
-    }
-    .water {
-        transition: height 1s ease, y 1s ease;
-        fill-opacity: 0.5;
-        animation: ripple 5s infinite ease-in-out;
-    }
-    /* smoother ripple effect */
-    @keyframes ripple {
-        0%   { transform: translateY(0px) scaleX(1.0); }
-        25%  { transform: translateY(1px) scaleX(1.01); }
-        50%  { transform: translateY(2px) scaleX(1.0); }
-        75%  { transform: translateY(1px) scaleX(0.99); }
-        100% { transform: translateY(0px) scaleX(1.0); }
+        rx: 15;
+        ry: 15;
+        pointer-events: none;
     }
     .info {
         margin-top: 10px;
@@ -67,8 +69,9 @@
 <h1>Zach & Jarrett's<br>Water Tank Level</h1>
 
 <svg viewBox="0 0 100 200">
-    <!-- Water first so outline can be on top -->
-    <rect id="water" x="10" y="190" width="80" height="0" rx="15" ry="15" class="water"/>
+    <!-- Water first -->
+    <rect id="water" x="12" y="190" width="76" height="0" rx="12" ry="12" class="water"/>
+    <!-- Tank outline drawn on top -->
     <rect x="10" y="10" width="80" height="180" rx="15" ry="15" class="tank-outline"/>
 </svg>
 
@@ -87,7 +90,6 @@
         water.setAttribute("height", height);
         water.setAttribute("y", y);
 
-        // Set water colour
         let color;
         if (level >= 100) color = "rgba(0, 255, 0, 0.5)";
         else if (level >= 75) color = "rgba(0, 150, 255, 0.5)";
@@ -96,7 +98,6 @@
         else color = "rgba(255, 0, 0, 0.5)";
         water.setAttribute("fill", color);
 
-        // Update text
         if (level === 2) {
             text.innerHTML = `<span class="warning">Colour Sensor Not Detected</span>`;
         } else {
@@ -124,11 +125,9 @@
         }
     }
 
-    // Start timer
     setInterval(updateTimeSince, 1000);
     setInterval(fetchData, 10000);
 
-    // Initial fetch
     fetchData();
 </script>
 

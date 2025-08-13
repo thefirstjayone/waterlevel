@@ -11,10 +11,22 @@
   <h1 class="title">Zach & Jarrett's<br>Water Tank Level</h1>
   <div class="tank-container">
     <svg class="tank" viewBox="0 0 200 400">
+      <defs>
+        <!-- Reflection gradient -->
+        <linearGradient id="reflection" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(255,255,255,0.4)"/>
+          <stop offset="50%" stop-color="rgba(255,255,255,0.05)"/>
+          <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+        </linearGradient>
+      </defs>
       <!-- Tank outline -->
-      <path d="M 30 20 Q 100 0 170 20 L 170 370 L 30 370 Z" fill="none" stroke="#ccc" stroke-width="4"/>
+      <path d="M 30 20 Q 100 0 170 20 L 170 370 L 30 370 Z" 
+            fill="#2a2a2a" stroke="#ccc" stroke-width="4"/>
       <!-- Water wave -->
       <path id="water" fill="rgba(0, 150, 255, 0.5)"></path>
+      <!-- Reflection highlight -->
+      <path d="M 40 25 Q 90 5 140 25 L 140 365 Q 90 345 40 365 Z"
+            fill="url(#reflection)" />
     </svg>
     <div class="percentage" id="percentage">--%</div>
   </div>
@@ -28,11 +40,11 @@ const waterEl = document.getElementById('water');
 const statusEl = document.getElementById('status');
 const lastUpdateEl = document.getElementById('lastUpdate');
 
-let currentLevel = 0; // Store current water percentage
-let waveOffset = 0;   // Wave phase offset for smooth animation
+let currentLevel = 0; 
+let waveOffset = 0;   
 
 function drawWave() {
-  const amplitude = 3; // small gentle wave
+  const amplitude = 3; // subtle wave height
   const wavePoints = [];
   const height = 370 - (currentLevel / 100) * 350;
   
@@ -45,7 +57,7 @@ function drawWave() {
     wavePoints.map(p => `L${p}`).join(' ') +
     ` L170,370 Z`);
 
-  waveOffset += 0.03; // controls wave speed
+  waveOffset += 0.03; 
   requestAnimationFrame(drawWave);
 }
 
@@ -53,7 +65,7 @@ function updateTank(level) {
   currentLevel = level;
   percentageEl.textContent = level + '%';
   
-  // Set water color
+  // Set water color based on level
   let color;
   if (level >= 100) color = "rgba(0, 200, 0, 0.5)";
   else if (level >= 75) color = "rgba(0, 100, 255, 0.5)";
@@ -63,7 +75,6 @@ function updateTank(level) {
 
   waterEl.setAttribute("fill", color);
 
-  // Status text for 2%
   if (level === 2) {
     statusEl.textContent = "Colour Sensor Not Detected";
     statusEl.style.color = "red";
@@ -82,7 +93,7 @@ function fetchData() {
     });
 }
 
-// Start animation
+// Start wave animation
 requestAnimationFrame(drawWave);
 
 // Fetch initial data and update every 10 seconds

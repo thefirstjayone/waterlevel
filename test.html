@@ -7,140 +7,133 @@
 <style>
   body {
     background-color: #121212;
-    color: white;
+    color: #fff;
     font-family: Arial, sans-serif;
-    text-align: center;
-    margin: 0;
-    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
   }
   h1 {
-    margin-top: 20px;
-    font-size: 2em;
+    text-align: center;
     line-height: 1.2em;
+    margin-bottom: 20px;
   }
-  .tank-container {
+  .tank {
     position: relative;
-    margin: 30px auto;
-    width: 200px;
-    height: 400px;
-    background: #333;
-    border-radius: 20px;
+    width: 160px;
+    height: 320px;
+    border: 4px solid #ccc;
+    border-radius: 15px;
     overflow: hidden;
-    border: 4px solid #555;
-    box-shadow: 0 0 15px rgba(0,0,0,0.8);
+    background-color: rgba(255,255,255,0.05);
   }
   .water {
     position: absolute;
     bottom: 0;
     width: 100%;
-    height: 0%;
-    background: rgba(0, 150, 255, 0.5);
-    animation: rise 1.5s ease-out forwards;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+    height: 0;
+    transition: height 1.5s ease-in-out;
+    background: rgba(0,150,255,0.4);
+    overflow: hidden;
   }
   .wave {
     position: absolute;
-    top: -10px;
-    left: 0;
+    bottom: 0;
     width: 200%;
-    height: 20px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 100%;
-    animation: wave 4s infinite linear;
+    height: 200%;
+    background: rgba(0,150,255,0.4);
+    border-radius: 40%;
+    opacity: 0.6;
+    animation: waveMove 8s linear infinite;
   }
-  @keyframes wave {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
+  .wave:nth-child(2) {
+    opacity: 0.4;
+    animation: waveMove 12s linear infinite;
   }
-  @keyframes rise {
-    from { height: var(--prev-height, 0%); }
-    to { height: var(--target-height); }
+  @keyframes waveMove {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  .last-update {
+    margin-top: 15px;
+    font-size: 0.9em;
+    color: #ccc;
   }
   .warning {
-    color: red;
+    color: #ff5555;
     font-weight: bold;
     margin-top: 10px;
-    animation: flash 1s infinite;
-  }
-  @keyframes flash {
-    0%, 50%, 100% { opacity: 1; }
-    25%, 75% { opacity: 0; }
+    font-size: 1.1em;
   }
 </style>
 </head>
 <body>
+  <h1>Zach & Jarrett's<br>Water Tank Level</h1>
 
-<h1>
-  Zach &amp; Jarrett's<br>
-  Water Tank Level
-</h1>
-
-<div class="tank-container">
-  <div class="water" id="water">
-    <div class="wave"></div>
+  <div class="tank">
+    <div class="water" id="water">
+      <div class="wave"></div>
+      <div class="wave"></div>
+    </div>
   </div>
-</div>
 
-<div id="level-text">Loading...</div>
-<div id="sensor-warning"></div>
-<div id="last-update">Time since last update: 0s</div>
+  <div class="last-update" id="lastUpdate">Loading...</div>
+  <div class="warning" id="warning"></div>
 
 <script>
-const channelID = "3026172";
+const channelID = 3026172;
 const readAPIKey = "AHHPO1T2TZDGZ2G8";
-let lastUpdateTime = Date.now();
-let prevHeight = 0;
 
-function fetchLevel() {
-  fetch(`https://api.thingspeak.com/channels/${channelID}/fields/1/last.json?api_key=${readAPIKey}`)
-    .then(response => response.json())
-    .then(data => {
-      let level = parseFloat(data.field1);
-      if (isNaN(level)) level = 0;
-      
-      updateTank(level);
-      lastUpdateTime = Date.now();
-    })
-    .catch(err => {
-      console.error("Error fetching data", err);
-    });
-}
+function updateWaterLevel(level) {
+  const water = document.getElementById("water");
+  const warning = document.getElementById("warning");
 
-function updateTank(level) {
-  const water = document.getElementById('water');
-  const levelText = document.getElementById('level-text');
-  const warning = document.getElementById('sensor-warning');
-  
-  levelText.textContent = `Water Level: ${level}%`;
-  
+  // Level colours
+  let color;
+  if (level >= 100) color = "rgba(0,255,0,0.4)";   // green
+  else if (level >= 75) color = "rgba(0,150,255,0.4)"; // blue
+  else if (level >= 50) color = "rgba(255,255,0,0.4)"; // yellow
+  else color = "rgba(255,0,0,0.4)";                   // red
+
+  water.style.background = color;
+  water.querySelectorAll('.wave').forEach(w => w.style.background = color);
+
+  // Set height
+  water.style.height = `${level}%`;
+
+  // Sensor warning
   if (level === 2) {
     warning.textContent = "Colour Sensor Not Detected";
   } else {
     warning.textContent = "";
   }
-  
-  // Change colour based on level
-  let colour;
-  if (level >= 100) colour = "rgba(0,255,0,0.5)";
-  else if (level >= 75) colour = "rgba(0,150,255,0.5)";
-  else if (level >= 50) colour = "rgba(255,255,0,0.5)";
-  else if (level >= 25) colour = "rgba(255,0,0,0.5)";
-  else colour = "rgba(255,0,0,0.5)";
-  
-  water.style.setProperty('--prev-height', prevHeight + "%");
-  water.style.setProperty('--target-height', level + "%");
-  water.style.background = colour;
-  prevHeight = level;
 }
 
-setInterval(() => {
-  const seconds = Math.floor((Date.now() - lastUpdateTime) / 1000);
-  document.getElementById('last-update').textContent = `Time since last update: ${seconds}s`;
-}, 1000);
+function secondsSince(dateStr) {
+  const then = new Date(dateStr);
+  const now = new Date();
+  return Math.floor((now - then) / 1000);
+}
 
-fetchLevel();
-setInterval(fetchLevel, 15000);
+async function fetchData() {
+  try {
+    const url = `https://api.thingspeak.com/channels/${channelID}/feeds.json?results=1&api_key=${readAPIKey}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const feed = data.feeds[0];
+    const level = parseInt(feed.field1) || 0;
+    updateWaterLevel(level);
+
+    document.getElementById("lastUpdate").textContent =
+      `Updated ${secondsSince(feed.created_at)} seconds ago`;
+  } catch (e) {
+    console.error("Error fetching data", e);
+  }
+}
+
+fetchData();
+setInterval(fetchData, 15000);
 </script>
-
 </body>
 </html>

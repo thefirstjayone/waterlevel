@@ -1,74 +1,50 @@
 body {
     background-color: #121212;
-    color: #f5f5f5;
+    color: #fff;
     font-family: Arial, sans-serif;
     text-align: center;
     margin: 0;
     padding: 20px;
 }
 
-h1 {
-    font-size: 2em;
+.title {
+    font-size: 1.8em;
+    font-weight: bold;
+    line-height: 1.3;
     margin-bottom: 20px;
-    line-height: 1.3em;
 }
 
-#tank-container {
+.tank-container {
     display: inline-block;
     position: relative;
 }
 
-#tank {
-    width: 200px;
-    height: 400px;
-    border: 4px solid #fff;
-    border-radius: 100px / 50px;
-    overflow: hidden;
-    background: linear-gradient(to bottom, #1e1e1e 0%, #0d0d0d 100%);
-    position: relative;
-    box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.1);
-}
-
-#water {
+#waterLevelText {
     position: absolute;
-    bottom: 0;
-    width: 200%;
-    left: -50%;
-    transition: height 1s ease, background-color 0.5s ease;
-    border-top-left-radius: 90px;
-    border-top-right-radius: 90px;
-    backdrop-filter: blur(2px);
-    background-size: 50% 100%;
-    animation: wave 4s infinite linear;
-}
-
-@keyframes wave {
-    from { background-position-x: 0; }
-    to { background-position-x: 50%; }
-}
-
-#percentage {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     font-size: 2em;
-    margin-top: 10px;
+    font-weight: bold;
 }
 
-#sensor-status {
-    color: red;
-    font-weight: bold;
-    margin-top: 5px;
+#statusMessage {
+    margin-top: 10px;
+    font-size: 1.2em;
+    color: #ff4d4d;
+}
+
+#lastUpdated {
+    margin-top: 15px;
+    font-size: 0.9em;
+    color: #aaa;
 }
 
 .flash {
-    animation: flashRed 1s infinite alternate;
+    animation: flash 1s infinite alternate;
 }
 
-@keyframes flashRed {
-    from { background-color: rgba(139, 0, 0, 0.6); }
-    to { background-color: rgba(255, 0, 0, 0.6); }
-}
-
-#last-update {
-    margin-top: 20px;
-    font-size: 0.9em;
-    color: #bbb;
+@keyframes flash {
+    from { fill-opacity: 0.5; }
+    to { fill-opacity: 1; }
 }

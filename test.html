@@ -6,14 +6,13 @@
 <title>Zach & Jarrett's Water Tank Level</title>
 <style>
   :root{
-    /* ~10% smaller than 220x440 */
-    --tank-w: 198px;
-    --tank-h: 396px;
+    /* 20% smaller than previous (198×396) */
+    --tank-w: 158px;
+    --tank-h: 316px;
 
-    --radius: 22px;
+    --radius: 18px;
     --outline: 4px;
 
-    /* JS updates this so waves keep animating without restarting */
     --water-color: rgba(0,130,220,.55);
   }
 
@@ -43,15 +42,12 @@
     font-size: clamp(18px, 3.4vw, 24px);
     opacity:.9;
   }
-
-  /* Percentage above tank */
   #levelText{
     font-size: clamp(20px, 4vw, 28px);
     font-weight: 700;
     margin: 2px 0 0;
     text-align:center;
   }
-
   .tank-wrap{
     width:var(--tank-w);
     height:var(--tank-h);
@@ -66,11 +62,10 @@
     height:100%;
     border-radius:var(--radius);
     background:#262b35;
-    overflow:hidden;                     /* clip water & surface inside */
+    overflow:hidden;
     box-shadow: inset 0 0 26px rgba(0,0,0,.55);
     isolation:isolate;
   }
-  /* Outline on top */
   .tank::after{
     content:"";
     position:absolute;
@@ -79,37 +74,30 @@
     border: var(--outline) solid #cfd6e4;
     pointer-events:none;
   }
-
-  /* WATER BODY: height animates smoothly each update */
   #water{
     position:absolute;
     left:0; right:0; bottom:0;
     height:0%;
     background: var(--water-color);
-    transition: height 1.2s ease;       /* smooth rise/fall */
+    transition: height 1.2s ease;
     will-change: height;
   }
-  /* Soft vertical shading for depth */
   #water::before{
     content:"";
     position:absolute; inset:0;
     background: linear-gradient(to top, rgba(255,255,255,.12), rgba(0,0,0,.12));
     pointer-events:none; mix-blend-mode: overlay;
   }
-
-  /* GENTLE WAVY SURFACE (no jittery pattern):
-     Two overlapping caps masked to a sine shape,
-     drifting slowly for subtle motion. */
   .surface{
     position:absolute; left:0; right:0;
     height:16px;
-    top:-10px;                 /* slightly above for overlap */
+    top:-10px;
     pointer-events:none;
   }
   .cap{
     position:absolute; top:0; left:0;
     width:240%; height:100%;
-    background-color: var(--water-color);  /* tinted via var */
+    background-color: var(--water-color);
     opacity:.26;
     -webkit-mask-image: url("data:image/svg+xml;utf8,<?xml version='1.0' encoding='UTF-8'?><svg xmlns='http://www.w3.org/2000/svg' width='220' height='16' viewBox='0 0 220 16'><path d='M0 8 C 55 4, 55 12, 110 8 S 165 12, 220 8 V16 H0 Z' fill=\"white\"/></svg>");
     mask-image: url("data:image/svg+xml;utf8,<?xml version='1.0' encoding='UTF-8'?><svg xmlns='http://www.w3.org/2000/svg' width='220' height='16' viewBox='0 0 220 16'><path d='M0 8 C 55 4, 55 12, 110 8 S 165 12, 220 8 V16 H0 Z' fill=\"white\"/></svg>");
@@ -131,19 +119,15 @@
     from{ transform: translateX(0) }
     to  { transform: translateX(-180px) }
   }
-
-  /* Low level cue */
   .low .tank::after{
     box-shadow: 0 0 10px rgba(255,72,72,.35);
     border-color: #ffd3d3;
   }
-
   .info{ text-align:center; font-size:14px; opacity:.95; }
   .warning{ color:#ff5c5c; font-weight:700; animation: warn 1.2s ease-in-out infinite alternate; }
   @keyframes warn{ from{opacity:1} to{opacity:.55} }
-
   @media (max-width:420px){
-    :root{ --tank-w: 70vw; --tank-h: 140vw; }
+    :root{ --tank-w: 60vw; --tank-h: 120vw; }
   }
 </style>
 </head>
@@ -155,9 +139,7 @@
 
 <div id="tankWrap" class="tank-wrap">
   <div class="tank">
-    <!-- Water body -->
     <div id="water">
-      <!-- Wavy surface that rides with the water top -->
       <div class="surface">
         <div class="cap"></div>
         <div class="cap back"></div>
@@ -170,7 +152,6 @@
 <div id="since" class="info">Time since last update: 0s</div>
 
 <script>
-  // ThingSpeak config
   const CHANNEL_ID   = 3026172;
   const READ_API_KEY = "AHHPO1T2TZDGZ2G8";
   const REFRESH_MS   = 15000;
@@ -184,34 +165,25 @@
   let lastUpdate = Date.now();
 
   function colorForLevel(level){
-    if (level >= 100) return 'rgba(0,180,0,0.55)';   // green
-    if (level >= 75)  return 'rgba(0,130,220,0.55)'; // blue
-    if (level >= 50)  return 'rgba(210,200,0,0.55)'; // yellow
-    if (level >= 25)  return 'rgba(230,90,0,0.55)';  // orange-red
-    return 'rgba(230,40,40,0.55)';                   // red
+    if (level >= 100) return 'rgba(0,180,0,0.55)';
+    if (level >= 75)  return 'rgba(0,130,220,0.55)';
+    if (level >= 50)  return 'rgba(210,200,0,0.55)';
+    if (level >= 25)  return 'rgba(230,90,0,0.55)';
+    return 'rgba(230,40,40,0.55)';
   }
-
   function setLevel(level){
     level = Math.max(0, Math.min(100, level));
-    // Smooth height animation; surface rides with it (it's inside #water)
     waterEl.style.height = `${level}%`;
-    // Update color via CSS var so animations do NOT restart
     document.documentElement.style.setProperty('--water-color', colorForLevel(level));
-
-    // Low-level glow
     tankWrap.classList.toggle('low', level <= 25);
-
-    // Texts
     if (level === 2){
       levelText.innerHTML = `<span class="warning">Colour Sensor Not Detected</span>`;
     } else {
       levelText.textContent = `${level}%`;
     }
     statusEl.textContent = `Water Level: ${level}%`;
-
     lastUpdate = Date.now();
   }
-
   async function fetchLatest(){
     try{
       const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/fields/1/last.json?api_key=${READ_API_KEY}`;
@@ -225,14 +197,10 @@
       console.error('ThingSpeak fetch error:', err);
     }
   }
-
-  // Seconds since last update
   setInterval(()=>{
     const secs = Math.floor((Date.now() - lastUpdate)/1000);
     sinceEl.textContent = `Time since last update: ${secs}s`;
   }, 1000);
-
-  // Start
   fetchLatest();
   setInterval(fetchLatest, REFRESH_MS);
 </script>

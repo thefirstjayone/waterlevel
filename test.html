@@ -32,18 +32,19 @@
         fill: none;
         stroke: #ccc;
         stroke-width: 4px;
-        rx: 15;
-        ry: 15;
     }
     .water {
         transition: height 1s ease, y 1s ease;
         fill-opacity: 0.5;
-        animation: ripple 4s infinite linear;
+        animation: ripple 5s infinite ease-in-out;
     }
+    /* smoother ripple effect */
     @keyframes ripple {
-        0% { transform: translateY(0px) }
-        50% { transform: translateY(2px) }
-        100% { transform: translateY(0px) }
+        0%   { transform: translateY(0px) scaleX(1.0); }
+        25%  { transform: translateY(1px) scaleX(1.01); }
+        50%  { transform: translateY(2px) scaleX(1.0); }
+        75%  { transform: translateY(1px) scaleX(0.99); }
+        100% { transform: translateY(0px) scaleX(1.0); }
     }
     .info {
         margin-top: 10px;
@@ -66,8 +67,9 @@
 <h1>Zach & Jarrett's<br>Water Tank Level</h1>
 
 <svg viewBox="0 0 100 200">
-    <rect x="10" y="10" width="80" height="180" rx="15" ry="15" class="tank-outline"/>
+    <!-- Water first so outline can be on top -->
     <rect id="water" x="10" y="190" width="80" height="0" rx="15" ry="15" class="water"/>
+    <rect x="10" y="10" width="80" height="180" rx="15" ry="15" class="tank-outline"/>
 </svg>
 
 <div class="info" id="level-text">Loading...</div>
@@ -75,7 +77,6 @@
 
 <script>
     let lastUpdate = Date.now();
-    let updateInterval = null;
 
     function updateTank(level) {
         const water = document.getElementById("water");
@@ -125,7 +126,7 @@
 
     // Start timer
     setInterval(updateTimeSince, 1000);
-    setInterval(fetchData, 10000); // every 10 seconds
+    setInterval(fetchData, 10000);
 
     // Initial fetch
     fetchData();

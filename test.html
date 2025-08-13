@@ -1,147 +1,64 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Water Tank Level</title>
-    <link rel="stylesheet" href="style.css">
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: #f0f0f0;
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
+<script>
+    const channelID = "3026172"; // ThingSpeak Channel ID
+    const readAPIKey = "AHHPO1T2TZDGZ2G8"; // ThingSpeak Read API Key
 
-        h1 {
-            margin-bottom: 10px;
-        }
+    let lastUpdateTime = null;
 
-        .tank {
-            width: 80%;
-            max-width: 300px;
-            height: 60%;
-            border: 4px solid #000;
-            position: relative;
-            background: #ddd;
-        }
+    function updateTank(level) {
+        const waterDiv = document.getElementById("water");
+        const levelText = document.getElementById("levelText");
 
-        .water {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            transition: height 1s ease, background-color 0.5s ease;
-        }
+        // Set height of water
+        waterDiv.style.height = `${level}%`;
 
-        .green { background: green; }
-        .blue { background: blue; }
-        .yellow { background: yellow; }
-        .red { background: red; }
-
-        .flash {
-            animation: flashRed 1s infinite;
-        }
-
-        @keyframes flashRed {
-            0% { background-color: red; }
-            50% { background-color: darkred; }
-            100% { background-color: red; }
-        }
-
-        .level-text {
-            position: absolute;
-            width: 100%;
-            top: 50%;
-            transform: translateY(-50%);
-            text-align: center;
-            font-size: 2em;
-            font-weight: bold;
-            color: white;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-
-        .update-time {
-            margin-top: 15px;
-            font-size: 1em;
-            color: #333;
-        }
-    </style>
-</head>
-<body>
-    <h1>Water Tank Level</h1>
-
-    <div class="tank">
-        <div class="water default" id="water"></div>
-        <div class="level-text" id="levelText">Loading...</div>
-    </div>
-
-    <div class="update-time" id="updateTime">Last updated: -- seconds ago</div>
-
-    <script>
-        const channelID = "3026172"; // ThingSpeak Channel ID
-        const readAPIKey = "AHHPO1T2TZDGZ2G8"; // ThingSpeak Read API Key
-
-        let lastUpdateTime = null;
-
-        function updateTank(level) {
-            const waterDiv = document.getElementById("water");
-            const levelText = document.getElementById("levelText");
-
-            // Set height of water
-            waterDiv.style.height = `${level}%`;
+        // Show special message if exactly 2%
+        if (level === 2) {
+            levelText.textContent = "Colour Sensor Not Detected";
+        } else {
             levelText.textContent = `${level}%`;
-
-            // Remove all color classes
-            waterDiv.className = "water";
-
-            // Set color based on level
-            if (level >= 100) {
-                waterDiv.classList.add("green");
-            } else if (level >= 75) {
-                waterDiv.classList.add("blue");
-            } else if (level >= 50) {
-                waterDiv.classList.add("yellow");
-            } else if (level >= 25) {
-                waterDiv.classList.add("red");
-            } else {
-                waterDiv.classList.add("red", "flash");
-            }
         }
 
-        function fetchLevel() {
-            const url = `https://api.thingspeak.com/channels/${channelID}/fields/1/last.json?api_key=${readAPIKey}`;
+        // Remove all color classes
+        waterDiv.className = "water";
 
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    const level = parseFloat(data.field1) || 0;
-                    updateTank(level);
-                    lastUpdateTime = Date.now();
-                })
-                .catch(error => {
-                    console.error("Error fetching data:", error);
-                });
+        // Set color based on level
+        if (level >= 100) {
+            waterDiv.classList.add("green");
+        } else if (level >= 75) {
+            waterDiv.classList.add("blue");
+        } else if (level >= 50) {
+            waterDiv.classList.add("yellow");
+        } else if (level >= 25) {
+            waterDiv.classList.add("red");
+        } else {
+            waterDiv.classList.add("red", "flash");
         }
+    }
 
-        function updateTimeSince() {
-            const updateTimeDiv = document.getElementById("updateTime");
-            if (lastUpdateTime) {
-                const secondsAgo = Math.floor((Date.now() - lastUpdateTime) / 1000);
-                updateTimeDiv.textContent = `Last updated: ${secondsAgo} second${secondsAgo !== 1 ? 's' : ''} ago`;
-            }
+    function fetchLevel() {
+        const url = `https://api.thingspeak.com/channels/${channelID}/fields/1/last.json?api_key=${readAPIKey}`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                const level = parseFloat(data.field1) || 0;
+                updateTank(level);
+                lastUpdateTime = Date.now();
+            })
+            .catch(error => {
+                console.error("Error fetching data:", error);
+            });
+    }
+
+    function updateTimeSince() {
+        const updateTimeDiv = document.getElementById("updateTime");
+        if (lastUpdateTime) {
+            const secondsAgo = Math.floor((Date.now() - lastUpdateTime) / 1000);
+            updateTimeDiv.textContent = `Last updated: ${secondsAgo} second${secondsAgo !== 1 ? 's' : ''} ago`;
         }
+    }
 
-        // Initial load
-        fetchLevel();
-        // Update every 20 seconds
-        setInterval(fetchLevel, 20000);
-        // Update time counter every second
-        setInterval(updateTimeSince, 1000);
-    </script>
-</body>
-</html>
+    fetchLevel();
+    setInterval(fetchLevel, 20000);
+    setInterval(updateTimeSince, 1000);
+</script>

@@ -1,0 +1,30 @@
+<svg class="tank" viewBox="0 0 200 400">
+  <defs>
+    <!-- Reflection gradient -->
+    <linearGradient id="reflection" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.4)"></stop>
+      <stop offset="50%" stop-color="rgba(255,255,255,0.05)"></stop>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"></stop>
+    </linearGradient>
+
+    <!-- Tank shape path for clipping -->
+    <clipPath id="tank-clip">
+      <path id="tank-shape" d="M 40 30 
+           Q 100 0 160 30 
+           L 160 350 
+           Q 160 370 140 370 
+           L 60 370 
+           Q 40 370 40 350 
+           Z"></path>
+    </clipPath>
+  </defs>
+
+  <!-- Tank outline -->
+  <use href="#tank-shape" fill="#2a2a2a" stroke="#ccc" stroke-width="4"></use>
+
+  <!-- Water wave (clipped) -->
+  <path id="water" clip-path="url(#tank-clip)" fill="rgba(0, 150, 255, 0.5)"></path>
+
+  <!-- Reflection highlight (clipped) -->
+  <path d="M 50 35 Q 100 10 150 35 L 150 345 Q 100 325 50 345 Z" fill="url(#reflection)" clip-path="url(#tank-clip)"></path>
+</svg>

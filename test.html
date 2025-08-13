@@ -1,35 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zach & Jarrett's Water Tank Level</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zach & Jarrett's Water Tank Level</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="title">
-        Zach & Jarrett's<br>
-        Water Tank Level
-    </div>
+<div class="container">
+  <h1 class="title">Zach & Jarrett's<br>Water Tank Level</h1>
+  <div class="tank-container">
+    <svg class="tank" viewBox="0 0 200 400">
+      <!-- Tank outline -->
+      <path d="M 30 20 Q 100 0 170 20 L 170 370 L 30 370 Z" fill="none" stroke="#ccc" stroke-width="4"/>
+      <!-- Water wave -->
+      <path id="water" fill="rgba(0, 150, 255, 0.5)"></path>
+    </svg>
+    <div class="percentage" id="percentage">--%</div>
+  </div>
+  <div class="status" id="status"></div>
+  <div class="last-update">Last update: <span id="lastUpdate">--</span></div>
+</div>
 
-    <div class="tank-container">
-        <svg id="waterTank" width="200" height="400" viewBox="0 0 200 400">
-            <defs>
-                <clipPath id="tankClip">
-                    <rect x="0" y="0" width="200" height="400" rx="100" ry="100"/>
-                </clipPath>
-            </defs>
-            <rect x="0" y="0" width="200" height="400" rx="100" ry="100" fill="#333" stroke="#777" stroke-width="4"/>
-            <g clip-path="url(#tankClip)">
-                <path id="waterWave" d="" fill="rgba(0,0,255,0.5)"></path>
-            </g>
-        </svg>
-        <div id="waterLevelText">0%</div>
-    </div>
+<script>
+const percentageEl = document.getElementById('percentage');
+const waterEl = document.getElementById('water');
+const statusEl = document.getElementById('status');
+const lastUpdateEl = document.getElementById('lastUpdate');
 
-    <div id="statusMessage"></div>
-    <div id="lastUpdated">Last updated: -- seconds ago</div>
+function updateTank(level) {
+  percentageEl.textContent = level + '%';
+  
+  // Set color by level
+  let color;
+  if (level >= 100) color = "rgba(0, 200, 0, 0.5)";
+  else if (level >= 75) color = "rgba(0, 100, 255, 0.5)";
+  else if (level >= 50) color = "rgba(255, 200, 0, 0.5)";
+  else if (level >= 25) color = "rgba(255, 0, 0, 0.5)";
+  else color = "rgba(255, 0, 0, 0.5)";
 
-    <script src="script.js"></script>
+  waterEl.setAttribute("fill", color);
+
+  // Draw wave path (subtle slosh)
+  const amplitude = 3; // subtle
+  const frequency = 2;
+  const height = 370 - (level / 100) * 350;
+  const wavePoints = [];
+  for (let x = 30; x <= 170; x += 5) {
+    const y = height + Math.sin((x / 20) + Date.now() / 1000) * amplitude;
+    wavePoints.push(`${x},${y}`);
+  }
+  waterEl.setAttribute("d", `M30,370 L30,${wavePoints[0].split(',')[1]} ` +
+    wavePoints.map(p => `L${p}`).join(' ') +
+    ` L170,370 Z`);
+  
+  // Status text for 2%
+  if (level === 2) {
+    statusEl.textContent = "Colour Sensor Not Detected";
+    statusEl.style.color = "red";
+  } else {
+    statusEl.textContent = "";
+  }
+}
+
+function fetchData() {
+  fetch('https://api.thingspeak.com/channels/3026172/fields/1/last.json?api_key=AHHPO1T2TZDGZ2G8')
+    .then(res => res.json())
+    .then(data => {
+      const level = parseInt(data.field1);
+      updateTank(level);
+      lastUpdateEl.textContent = new Date(data.created_at).toLocaleTimeString();
+    });
+}
+
+setInterval(fetchData, 10000); // refresh every 10 sec
+fetchData();
+</script>
 </body>
 </html>

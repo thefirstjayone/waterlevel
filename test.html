@@ -1,121 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zach & Jarrett's Water Tank Level</title>
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zach & Jarrett's Water Tank Level</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="container">
-  <h1 class="title">Zach & Jarrett's<br>Water Tank Level</h1>
-  <div class="tank-container">
-    <svg class="tank" viewBox="0 0 200 400">
-      <defs>
-        <!-- Reflection gradient -->
-        <linearGradient id="reflection" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="rgba(255,255,255,0.4)"/>
-          <stop offset="50%" stop-color="rgba(255,255,255,0.05)"/>
-          <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
-        </linearGradient>
-      </defs>
-      <!-- Tank outline with rounded bottom -->
-      <path d="M 30 20 
-               Q 100 0 170 20 
-               L 170 350 
-               Q 170 370 150 370 
-               L 50 370 
-               Q 30 370 30 350 
-               Z" 
-            fill="#2a2a2a" stroke="#ccc" stroke-width="4"/>
-      <!-- Water wave -->
-      <path id="water" fill="rgba(0, 150, 255, 0.5)"></path>
-      <!-- Reflection highlight -->
-      <path d="M 40 25 Q 90 5 140 25 L 140 345 Q 90 325 40 345 Z"
-            fill="url(#reflection)" />
-    </svg>
-    <div class="percentage" id="percentage">--%</div>
-  </div>
-  <div class="status" id="status"></div>
-  <div class="last-update">Last update: <span id="lastUpdate">--</span> seconds ago</div>
-</div>
+    <div class="title">
+        Zach & Jarrett's<br>Water Tank Level
+    </div>
+    
+    <div class="tank-container">
+        <div class="tank">
+            <div class="water" id="water"></div>
+            <div class="reflection"></div>
+        </div>
+    </div>
 
-<script>
-const percentageEl = document.getElementById('percentage');
-const waterEl = document.getElementById('water');
-const statusEl = document.getElementById('status');
-const lastUpdateEl = document.getElementById('lastUpdate');
+    <div id="status"></div>
+    <div id="last-update">Last update: <span id="update-seconds">0</span> seconds ago</div>
 
-let currentLevel = 0; 
-let targetLevel = 0;
-let waveOffset = 0;   
-let lastFetchTime = Date.now();
-
-function drawWave() {
-  const amplitude = 3;
-  const height = 370 - (currentLevel / 100) * 330;
-  const wavePoints = [];
-
-  for (let x = 30; x <= 170; x += 5) {
-    const y = height + Math.sin((x / 20) + waveOffset) * amplitude;
-    wavePoints.push(`${x},${y}`);
-  }
-  
-  waterEl.setAttribute("d", `M30,370 L30,${wavePoints[0].split(',')[1]} ` +
-    wavePoints.map(p => `L${p}`).join(' ') +
-    ` L170,370 Z`);
-
-  // Smoothly animate water level
-  currentLevel += (targetLevel - currentLevel) * 0.05;
-
-  waveOffset += 0.03; 
-  requestAnimationFrame(drawWave);
-}
-
-function updateTank(level) {
-  targetLevel = level;
-  percentageEl.textContent = level + '%';
-  
-  // Water color based on level
-  let color;
-  if (level >= 100) color = "rgba(0, 200, 0, 0.5)";
-  else if (level >= 75) color = "rgba(0, 100, 255, 0.5)";
-  else if (level >= 50) color = "rgba(255, 200, 0, 0.5)";
-  else if (level >= 25) color = "rgba(255, 100, 0, 0.5)";
-  else color = "rgba(255, 0, 0, 0.5)";
-
-  waterEl.setAttribute("fill", color);
-
-  if (level === 2) {
-    statusEl.textContent = "Colour Sensor Not Detected";
-    statusEl.style.color = "red";
-  } else {
-    statusEl.textContent = "";
-  }
-}
-
-function fetchData() {
-  fetch('https://api.thingspeak.com/channels/3026172/fields/1/last.json?api_key=AHHPO1T2TZDGZ2G8')
-    .then(res => res.json())
-    .then(data => {
-      const level = parseInt(data.field1);
-      updateTank(level);
-      lastFetchTime = new Date(data.created_at).getTime();
-    });
-}
-
-function updateTimeSince() {
-  const secondsAgo = Math.floor((Date.now() - lastFetchTime) / 1000);
-  lastUpdateEl.textContent = secondsAgo >= 0 ? secondsAgo : '--';
-}
-
-// Start animations
-requestAnimationFrame(drawWave);
-
-// Fetch initial data and update every 10 seconds
-fetchData();
-setInterval(fetchData, 10000);
-setInterval(updateTimeSince, 1000);
-</script>
+    <script src="script.js"></script>
 </body>
 </html>

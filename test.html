@@ -8,7 +8,7 @@
         html, body {
             height: 100%;
             margin: 0;
-            background-color: #f0f0f0;
+            background-color: #e8f4f8;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -18,16 +18,18 @@
             margin-top: 20px;
             font-size: 1.8em;
             text-align: center;
+            line-height: 1.2em;
         }
         #tank {
-            width: 300px; /* fixed width */
-            height: 60%;
-            border: 3px solid #333;
-            border-radius: 12px;
+            width: 300px;
+            height: 500px; /* fixed height */
+            border: 6px solid #555;
+            border-radius: 150px / 40px; /* curved top & bottom */
             position: relative;
             background-color: white;
             overflow: hidden;
             margin-top: 20px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.3);
         }
         #water {
             position: absolute;
@@ -61,7 +63,10 @@
     </style>
 </head>
 <body>
-    <h1>Zach & Jarrett's Water Tank Level</h1>
+    <h1>
+        Zach & Jarrett's<br>
+        Water Tank Level
+    </h1>
 
     <div id="tank">
         <div id="water" class="green"></div>
@@ -79,18 +84,14 @@
             const waterDiv = document.getElementById("water");
             const levelText = document.getElementById("levelText");
 
-            // Adjust height
             waterDiv.style.height = `${level}%`;
 
-            // Sensor missing case
             if (level === 2) {
                 levelText.textContent = "Colour Sensor Not Detected";
-                waterDiv.className = "water red flash";
+                waterDiv.className = "red flash";
             } else {
                 levelText.textContent = `${level}%`;
-
-                // Remove all color classes first
-                waterDiv.className = "water";
+                waterDiv.className = "";
 
                 if (level >= 100) {
                     waterDiv.classList.add("green");
@@ -129,10 +130,9 @@
             }
         }
 
-        // Run after page load
         fetchLevel();
-        setInterval(fetchLevel, 15000); // every 15s
-        setInterval(updateTimeSince, 1000); // update counter
+        setInterval(fetchLevel, 15000); // every 15 seconds
+        setInterval(updateTimeSince, 1000);
     </script>
 </body>
 </html>

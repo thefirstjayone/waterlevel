@@ -178,7 +178,10 @@
     tankWrap.classList.toggle('low', level <= 25);
     if (level === 2){
       levelText.innerHTML = `<span class="warning">Colour Sensor Not Detected</span>`;
-    } else {
+    } else 
+    if (level === 4){
+      levelText.innerHTML = `<span class="warning">Establishing Link To Water Tank</span>`;
+    } else{
       levelText.textContent = `${level}%`;
     }
     statusEl.textContent = `Water Level: ${level}%`;

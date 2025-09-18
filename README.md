@@ -30,17 +30,6 @@ Usage
 	3.	Open the Serial Monitor (115200 baud) for debug logs and calibration.
 	4.	View live water level data on ThingSpeak or integrate with a smart home platform.
 
-Level  Pin State  Notes
-
-100%   A HIGH     Normal full tank
-
-75%    C HIGH
-
-50%    A+B HIGH
-
-25%    B HIGH
-
-5%     B+C HIGH   Error – connecting
 
 Calibration:
 How it works
@@ -66,4 +55,16 @@ Serial commands (type in Serial Monitor)
 
 Tip: Do them in order: cal 4, 100, cal 75, cal 50, cal 25, cal 5, then compute, then run.
 4%     Flicker    Error – unstable
+
+Level  Pin State  Notes
+
+100%   A HIGH     Normal full tank
+
+75%    C HIGH
+
+50%    A+B HIGH
+
+25%    B HIGH
+
+5%     B+C HIGH   Error – connecting
 

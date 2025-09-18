@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Water Level — Emoji View</title>
+<style>
+  :root{
+    --bg:#0b0f14; --fg:#e6edf3; --muted:#8aa1b2;
+    --card:#121923; --ok:#2ea043; --warn:#d29922; --bad:#d73a49;
+  }
+  body{
+    margin:0; background:radial-gradient(1200px 1200px at 20% -10%, #0e1621 0%, var(--bg) 55%, #06090c 100%);
+    color:var(--fg); font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica Neue,Arial;
+    display:flex; align-items:center; justify-content:center; height:100vh; padding:24px;
+  }
+  .wrap{
+    width:min(720px,100%); background:linear-gradient(180deg,#111922 0%,var(--card) 100%);
+    border:1px solid rgba(255,255,255,.06); border-radius:16px; padding:28px 22px; text-align:center;
+    box-shadow:0 10px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.03);
+    position:relative; overflow:hidden;
+  }
+  h1{margin:0 0 10px; font-weight:800; line-height:1.15}
+  .title-line{display:block}
+  .title-line.top{font-size:clamp(18px,3.6vw,26px)}
+  .title-line.bottom{font-size:clamp(20px,4.2vw,30px)}
+  .emoji{
+    font-size:clamp(80px,22vw,180px); line-height:1; margin:8px 0 6px;
+    display:inline-block; transform-origin:center; filter:drop-shadow(0 4px 18px rgba(0,0,0,.35));
+  }
+  .bounce{animation:bounce .6s ease}
+  @keyframes bounce{
+    0%{transform:scale(.9)}
+    60%{transform:scale(1.1)}
+    100%{transform:scale(1)}
+  }
+  .celebrate{animation:celebrate 1s ease forwards}
+  @keyframes celebrate {
+    0%{transform:scale(1); filter:drop-shadow(0 0 0 rgba(255,255,255,.6))}
+    50%{transform:scale(1.2); filter:drop-shadow(0 0 18px rgba(255,255,255,.9))}
+    100%{transform:scale(1); filter:drop-shadow(0 4px 18px rgba(0,0,0,.35))}
+  }
+  .confetti{
+    position:absolute; top:0; left:0; right:0; bottom:0; pointer-events:none; overflow:hidden;
+  }
+  .confetti span{
+    position:absolute; top:-10px; font-size:18px; animation:fall 2.5s linear forwards;
+  }
+  @keyframes fall{
+    to{transform:translateY(120vh) rotate(720deg); opacity:0}
+  }
+  .level{font-weight:800; font-size:clamp(22px,4.5vw,36px); margin-top:6px}
+  .pill{
+    display:inline-block; margin:6px; padding:4px 10px; border-radius:999px; font-size:14px;
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08); color:var(--muted);
+  }
+  .ok{color:var(--ok)} .warn{color:var(--warn)} .err{color:var(--bad)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>
+    <span class="title-line top">Zach &amp; Jarrett’s</span>
+    <span class="title-line bottom">Water Level — Emoji</span>
+  </h1>
+
+  <div id="emoji" class="emoji">—</div>
+  <div id="level" class="level">—%</div>
+
+  <div>
+    <span id="status" class="pill">Loading…</span>
+    <span id="updated" class="pill">Updated — sec ago</span>
+  </div>
+
+  <div id="confetti" class="confetti"></div>
+</div>
+
+<script>
+  const channelID=3026172, readKey="L17OA7OQ6RW7XWSB";
+  const API=`https://api.thingspeak.com/channels/${channelID}/fields/1/last.json?api_key=${readKey}`;
+
+  const elEmoji=document.getElementById('emoji');
+  const elLevel=document.getElementById('level');
+  const elStatus=document.getElementById('status');
+  const elUpd=document.getElementById('updated');
+  const confettiBox=document.getElementById('confetti');
+
+  const emojiMap=new Map([[100,'😺'],[75,'😼'],[50,'😿'],[25,'🙀']]);
+  const specialMap=new Map([[4,'🔄'],[2,'🚫'],[1,'❔'],[0,'—']]);
+
+  let lastLevel=null,lastISO=null,timer=null;
+
+  function secondsSince(iso){
+    if(!iso) return '—'; const s=Math.floor((Date.now()-new Date(iso))/1000); return s+" sec ago";
+  }
+
+  function setStatus(txt,cls=""){elStatus.textContent=txt; elStatus.className="pill "+cls;}
+
+  function dropConfetti(){
+    for(let i=0;i<20;i++){
+      const s=document.createElement('span');
+      s.textContent=['✨','🎉','⭐','💧'][Math.floor(Math.random()*4)];
+      s.style.left=Math.random()*100+'%';
+      s.style.animationDuration=(1.5+Math.random()*1)+'s';
+      confettiBox.appendChild(s);
+      setTimeout(()=>s.remove(),2500);
+    }
+  }
+
+  function showLevel(level,iso){
+    elLevel.textContent=`${level}%`;
+    let icon=emojiMap.get(level)||specialMap.get(level)||'❔';
+
+    if(level!==lastLevel){
+      elEmoji.classList.remove('bounce','celebrate');
+      void elEmoji.offsetWidth;
+      elEmoji.classList.add('bounce');
+      if(level===100){
+        elEmoji.classList.add('celebrate');
+        dropConfetti();
+      }
+    }
+    elEmoji.textContent=icon;
+
+    if(level===100) setStatus("Full","ok");
+    else if(level===75) setStatus("High","");
+    else if(level===50) setStatus("Medium","warn");
+    else if(level===25) setStatus("Low","err");
+    else if(level===4) setStatus("Flashing (G/B)","warn");
+    else if(level===2) setStatus("Sensor not found","err");
+    else if(level===1) setStatus("Unknown","warn");
+    else setStatus("—");
+
+    lastISO=iso; elUpd.textContent="Updated "+secondsSince(iso);
+    if(timer) clearInterval(timer);
+    timer=setInterval(()=>elUpd.textContent="Updated "+secondsSince(iso),1000);
+
+    lastLevel=level;
+  }
+
+  async function load(){
+    try{
+      const r=await fetch(API,{cache:'no-store'});
+      const j=await r.json();
+      const level=parseInt(j.field1??'0',10);
+      showLevel(level,j.created_at);
+    }catch(e){setStatus("Network error","err");}
+  }
+  load(); setInterval(load,10000);
+</script>
+</body>
+</html>

@@ -31,10 +31,15 @@ Usage
 	4.	View live water level data on ThingSpeak or integrate with a smart home platform.
 
 Level  Pin State  Notes
+
 100%   A HIGH     Normal full tank
+
 75%    C HIGH
+
 50%    A+B HIGH
+
 25%    B HIGH
+
 5%     B+C HIGH   Error – connecting
 
 Calibration:

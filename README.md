@@ -36,5 +36,29 @@ Level  Pin State  Notes
 50%    A+B HIGH
 25%    B HIGH
 5%     B+C HIGH   Error – connecting
+
+Calibration:
+How it works
+	•	All pins use analogReadMilliVolts (so marginal levels are handled well).
+	•	You’ll run six short calibrations (one per state): 100, 75, 50, 25, 5, 4.
+	•	For each calibration, the board samples A=D0, B=D1, C=D2 for ~30s and stores their averages to NVS (flash).
+	•	After the five states are captured, it computes adaptive thresholds per pin:
+	•	For each pin, it averages that pin’s readings in the states where it should be ON and OFF, then sets threshold_pin = (avgON + avgOFF)/2.
+	•	Then normal operation uses those thresholds to classify states (same mapping you wanted).
+
+Serial commands (type in Serial Monitor)
+	•	cal 100 — (Green) capture voltages for the 100% (A) state
+	•	cal 75  — (Blue) capture 75% (C)
+	•	cal 50  — (Yellow) capture 50% (A+B)
+	•	cal 25  — (Red) capture 25% (B)
+	•	cal 5   — (Violet) capture 5% (B+C)
+ 	•	cal 4   — (Green/Blue Flicker) capture 4% (B+C)
+	•	compute — compute thresholds from the captured states and save
+	•	show    — print all saved calibration values and thresholds
+	•	reset   — clear calibration & thresholds from flash
+	•	run     — exit calibration mode and start normal reporting
+	•	help    — list commands
+
+Tip: Do them in order: cal 4, 100, cal 75, cal 50, cal 25, cal 5, then compute, then run.
 4%     Flicker    Error – unstable
 
